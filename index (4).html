@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AMS Guide — Kuwait Hospital</title>
+<meta name="theme-color" content="#0B2E4F">
+<meta name="description" content="Point-of-care antimicrobial prescribing guidance for Kuwait Hospital.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F7F9; --paper-raised:#FFFFFF; --ink:#16232E; --muted:#5B6B78; --faint:#9AA9B4; --line:#DEE6EC;
+    --navy:#0B2E4F; --navy-tint:#E7EEF4; --teal:#0E7C7B; --teal-tint:#E1F2F1;
+    --green:#1E7A46; --green-tint:#E7F5EC; --amber:#9A6300; --amber-tint:#FBF0DA; --red:#9E2A1E; --red-tint:#FBE7E4;
+    --radius:12px; --shadow: 0 1px 2px rgba(11,46,79,.06), 0 6px 20px -8px rgba(11,46,79,.15);
+    --header-h: 96px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overscroll-behavior-y:none; }
+  .display{font-family:'Barlow Semi Condensed',sans-serif;} .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;} button{font-family:inherit;}
+  :focus-visible{ outline:2.5px solid var(--teal); outline-offset:2px; }
+  ::selection{ background:#BFE6E4; }
+
+  /* ================= SPLASH ================= */
+  #splash{
+    position:fixed; inset:0; z-index:100; background:var(--paper);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; text-align:center; padding:20px; cursor:pointer;
+    transition:opacity .35s ease, visibility .35s ease;
+  }
+  #splash.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  #splash img{ width:96px; height:auto; animation:splashPop .5s cubic-bezier(.2,.9,.3,1.2); }
+  #splash .eyebrow{ font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); margin-top:6px; }
+  #splash h1{ font-family:'Barlow Semi Condensed',sans-serif; font-weight:800; font-size:28px; color:var(--navy); margin:2px 0 0; }
+  #splash .sub{ color:var(--muted); font-size:13.5px; max-width:280px; margin-top:2px; }
+  #splash .hint{ position:absolute; bottom:30px; font-size:11.5px; color:var(--faint); display:flex; align-items:center; gap:6px; }
+  #splash .hint .dot{ width:5px; height:5px; border-radius:50%; background:var(--teal); animation:dotPulse 1.2s infinite ease-in-out; }
+  #splash .hint .dot:nth-child(2){ animation-delay:.15s; } #splash .hint .dot:nth-child(3){ animation-delay:.3s; }
+  @keyframes splashPop{ from{ transform:scale(.7); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  @keyframes dotPulse{ 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
+
+  /* ================= STICKY HEADER ================= */
+  .stickytop{ position:sticky; top:0; z-index:40; background:var(--paper-raised); border-bottom:1px solid var(--line); }
+  .ticker{ background:var(--navy); color:#EAF1F6; font-size:12px; letter-spacing:.02em; padding:6px 16px; display:flex; align-items:center; gap:10px; overflow-x:auto; white-space:nowrap; }
+  .ticker b{color:#fff; font-weight:700;} .ticker .pipe{color:#5B7C97;}
+  .ticker .restricted-word{ background:var(--red); color:#fff; border-radius:4px; padding:1px 6px; font-weight:700; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+  .appbar{ display:flex; align-items:center; gap:10px; padding:12px 16px; min-height:36px; }
+  .back-btn{ display:none; align-items:center; justify-content:center; width:34px; height:34px; border-radius:9px; border:1.5px solid var(--line); background:var(--paper-raised); color:var(--navy); cursor:pointer; flex-shrink:0; }
+  .back-btn.show{ display:flex; }
+  .appbar-title{ flex:1; min-width:0; }
+  .appbar-title .eyebrow{ font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); }
+  .appbar-title h1{ font-family:'Barlow Semi Condensed',sans-serif; font-weight:800; font-size:18px; margin:0; color:var(--navy); line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .brand-mark-small{ height:30px; width:auto; flex-shrink:0; }
+  .install-btn{ display:none; align-items:center; gap:6px; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:8px 11px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0; white-space:nowrap; }
+  .install-btn.show{ display:inline-flex; }
+
+  /* ================= SCREENS ================= */
+  .screens{ position:relative; }
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:screenIn .22s ease; }
+  @keyframes screenIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  .page{ max-width:640px; margin:0 auto; padding:18px 16px 40px; }
+
+  /* ---- Home ---- */
+  .welcome-line{ font-size:13.5px; color:var(--muted); margin:2px 2px 18px; line-height:1.5; }
+  .tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:420px){ .tile-grid{ grid-template-columns:1fr; } }
+  .tile{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:18px 16px; text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:10px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .tile:hover{ transform:translateY(-2px); box-shadow:0 4px 14px -4px rgba(11,46,79,.25); }
+  .tile .tile-icon{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .tile .tile-title{ font-family:'Barlow Semi Condensed',sans-serif; font-weight:700; font-size:16.5px; color:var(--navy); }
+  .tile .tile-desc{ font-size:12px; color:var(--muted); line-height:1.4; }
+  .tile.t-guidelines .tile-icon{ background:var(--teal-tint); color:var(--teal); }
+  .tile.t-dosing .tile-icon{ background:var(--green-tint); color:var(--green); }
+  .tile.t-calc .tile-icon{ background:var(--navy-tint); color:var(--navy); }
+  .tile.t-policy .tile-icon{ background:var(--red-tint); color:var(--red); }
+
+  /* ---- list rows (systems / conditions) ---- */
+  .search-box{ position:relative; margin-bottom:12px; }
+  .search-box input{ width:100%; font-family:'Inter',sans-serif; font-size:15.5px; padding:11px 36px 11px 38px; border-radius:9px; border:1.5px solid var(--line); background:var(--paper); color:var(--ink); }
+  .search-box input:focus{ border-color:var(--teal); background:#fff; }
+  .search-box svg.icon{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5; pointer-events:none; }
+  .search-box .clear-btn{ position:absolute; right:9px; top:50%; transform:translateY(-50%); width:20px; height:20px; border-radius:50%; border:none; background:var(--line); color:var(--muted); font-size:13px; line-height:20px; cursor:pointer; display:none; padding:0; }
+  .search-box.has-value .clear-btn{ display:block; }
+
+  .chip-group{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .chip{ font-size:12px; font-weight:600; padding:6px 11px; border-radius:100px; border:1.5px solid var(--line); background:var(--paper-raised); color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .chip:hover{ border-color:var(--teal); color:var(--teal); }
+  .chip.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .chip.restricted-chip.active{ background:var(--red); border-color:var(--red); }
+
+  .list{ display:flex; flex-direction:column; gap:8px; }
+  .row{
+    display:flex; align-items:center; gap:12px; background:var(--paper-raised); border:1px solid var(--line);
+    border-radius:10px; padding:13px 14px; cursor:pointer; box-shadow:var(--shadow); text-align:left;
+  }
+  .row:hover{ border-color:var(--teal); }
+  .row .row-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .row .row-main{ flex:1; min-width:0; }
+  .row .row-title{ font-family:'Barlow Semi Condensed',sans-serif; font-weight:700; font-size:15.5px; color:var(--ink); }
+  .row .row-sub{ font-size:11.5px; color:var(--faint); margin-top:1px; }
+  .row .row-count{ font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--faint); background:var(--paper); border-radius:6px; padding:3px 8px; flex-shrink:0; }
+  .row .chevron{ color:var(--faint); flex-shrink:0; }
+  .row.disabled{ opacity:.42; cursor:default; }
+  .row.disabled:hover{ border-color:var(--line); }
+  .soon-badge{ font-size:9px; font-weight:700; text-transform:uppercase; background:var(--amber-tint); color:var(--amber); border-radius:4px; padding:2px 6px; flex-shrink:0; }
+
+  .empty{ text-align:center; padding:50px 20px; color:var(--muted); }
+  .empty .display{ font-size:20px; color:var(--navy); margin-bottom:6px; }
+  mark{ background:#FFE79A; color:inherit; border-radius:3px; padding:0 2px; }
+
+  /* ---- condition detail card ---- */
+  .card{ position:relative; background:var(--paper-raised); border-radius:var(--radius); box-shadow:var(--shadow); display:flex; overflow:hidden; border:1px solid var(--line); }
+  .card .spine{ width:9px; flex-shrink:0; }
+  .card .body{ flex:1; padding:18px 18px 18px 16px; min-width:0; }
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .card-title{ font-family:'Barlow Semi Condensed',sans-serif; font-weight:700; font-size:19px; color:var(--ink); letter-spacing:-.005em; }
+  .route-tag{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:.03em; padding:3px 8px; border-radius:5px; white-space:nowrap; }
+  .workup{ font-size:12.5px; color:var(--muted); font-style:italic; margin:8px 0 12px; line-height:1.5; }
+  .rowset{ margin-top:10px; } .rowset + .rowset{ margin-top:16px; padding-top:16px; border-top:1px dashed var(--line); }
+  .pathogens{ font-size:11.5px; font-weight:600; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; margin-bottom:9px; }
+  .drug-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:480px){ .drug-grid{ grid-template-columns:1fr; } }
+  .drug-col-label{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px; }
+  .drug-col-label.first{ color:var(--green); } .drug-col-label.alt{ color:var(--amber); }
+  .drug-line{ font-size:14.5px; line-height:1.6; margin-bottom:3px; }
+  .drug-name{ font-weight:600; } .drug-dose{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted); }
+  .restricted-badge{ display:inline-block; background:var(--red-tint); color:var(--red); font-family:'IBM Plex Mono',monospace; font-size:9.5px; font-weight:600; border-radius:4px; padding:1px 5px; margin-left:5px; vertical-align:1px; letter-spacing:.02em; }
+  .footer-row{ display:flex; justify-content:flex-end; margin-top:14px; }
+  .duration-badge{ font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:var(--navy-tint); color:var(--navy); padding:4px 10px; border-radius:6px; }
+
+  /* ---- generic content pages (dosing/calc/policy) ---- */
+  .page h2{ font-family:'Barlow Semi Condensed',sans-serif; font-size:22px; color:var(--navy); margin:0 0 4px; }
+  .page .sub{ color:var(--muted); font-size:13px; margin-bottom:20px; }
+  .card-simple{ background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px 18px; margin-bottom:14px; }
+  .card-simple h3{ font-family:'Barlow Semi Condensed',sans-serif; font-size:16px; color:var(--navy); margin:0 0 8px; }
+  table.dose-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.dose-table th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:700; padding:8px 8px; border-bottom:2px solid var(--line); }
+  table.dose-table td{ padding:9px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.dose-table td.mono, table.dose-table .mono{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); }
+  table.dose-table tr:last-child td{ border-bottom:none; }
+  .calc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:420px){ .calc-grid{ grid-template-columns:1fr; } }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:12px; font-weight:600; color:var(--muted); }
+  .field select, .field input{ font-family:'IBM Plex Mono',monospace; font-size:14.5px; padding:9px 10px; border-radius:7px; border:1.5px solid var(--line); background:var(--paper); color:var(--ink); }
+  .field select:focus, .field input:focus{ border-color:var(--teal); background:#fff; }
+  .calc-result{ margin-top:14px; padding:14px 16px; border-radius:9px; background:var(--teal-tint); border:1px solid var(--teal); }
+  .calc-result .big{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600; color:var(--navy); }
+  .calc-result .label{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--teal); font-weight:700; margin-bottom:4px; }
+  .calc-result .note{ font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .calc-result.warn{ background:var(--amber-tint); border-color:var(--amber); } .calc-result.warn .label{ color:var(--amber); }
+  .restricted-banner{ background:var(--red); color:#fff; border-radius:var(--radius); padding:14px 16px; margin-bottom:18px; }
+  .restricted-banner .label{ font-weight:700; font-size:13px; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+  .restricted-banner .drugs{ font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.9; }
+  .restricted-banner .drugs span{ background:rgba(255,255,255,.18); border-radius:4px; padding:2px 7px; margin-right:6px; display:inline-block; margin-bottom:4px; }
+  .rule-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:18px; }
+  @media (max-width:420px){ .rule-grid{ grid-template-columns:1fr; } }
+  .rule{ background:var(--teal-tint); border:1px solid var(--teal); border-radius:9px; padding:12px 14px; font-size:12.5px; font-weight:600; color:var(--navy); }
+
+  .totop{ position:fixed; right:16px; bottom:16px; z-index:50; width:40px; height:40px; border-radius:50%; background:var(--navy); color:#fff; border:none; cursor:pointer; box-shadow:0 6px 18px -4px rgba(11,46,79,.45); display:none; align-items:center; justify-content:center; opacity:0; transform:translateY(8px); transition:.18s ease; }
+  .totop.show{ display:flex; opacity:1; transform:translateY(0); }
+  .offline-banner{ display:none; background:var(--amber); color:#3A2900; text-align:center; font-size:12px; font-weight:700; padding:6px; }
+  .offline-banner.show{ display:block; }
+  footer.page-footer{ max-width:640px; margin:20px auto 0; padding:16px; color:var(--faint); font-size:11px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <img src="logo-mark.png" alt="Kuwait Hospital">
+  <div class="eyebrow">Kuwait Hospital</div>
+  <h1>Antimicrobial Guide</h1>
+  <div class="sub">Point-of-care prescribing guidance, dosing reference, and stewardship rules — works offline.</div>
+  <div class="hint"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+</div>
+
+<div class="offline-banner" id="offlineBanner">You're offline — showing cached content</div>
+
+<div class="stickytop" id="stickyTop">
+  <div class="ticker">
+    <span><b>De-escalate 48–72h</b></span><span class="pipe">|</span>
+    <span><b>IV → PO ASAP</b></span><span class="pipe">|</span>
+    <span><b>Shortest effective course</b></span><span class="pipe">|</span>
+    <span>Restricted (ID consult after 48h):
+      <span class="restricted-word">GENTAMICIN</span><span class="restricted-word">AMIKACIN</span>
+      <span class="restricted-word">MEROPENEM</span><span class="restricted-word">ERTAPENEM</span>
+      <span class="restricted-word">VANCOMYCIN</span><span class="restricted-word">COLISTIN</span>
+    </span>
+  </div>
+  <div class="appbar">
+    <button class="back-btn" id="backBtn" aria-label="Back">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <img class="brand-mark-small" id="appbarLogo" src="logo-mark.png" alt="">
+    <div class="appbar-title">
+      <div class="eyebrow" id="appbarEyebrow">Kuwait Hospital</div>
+      <h1 id="appbarTitle">Antimicrobial Guide</h1>
+    </div>
+    <button class="install-btn" id="installBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 3v13m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+      Install
+    </button>
+  </div>
+</div>
+
+<div class="screens" id="screens">
+
+  <!-- HOME -->
+  <section class="screen active" id="screen-home">
+    <div class="page">
+      <div class="welcome-line">Choose a section to get started.</div>
+      <div class="tile-grid">
+        <button class="tile t-guidelines" data-goto="systems">
+          <div class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg></div>
+          <div class="tile-title">Guidelines</div>
+          <div class="tile-desc">Browse by body system, then condition</div>
+        </button>
+        <button class="tile t-dosing" data-goto="dosing">
+          <div class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></div>
+          <div class="tile-title">Dosing</div>
+          <div class="tile-desc">Adult, pediatric &amp; prophylaxis tables</div>
+        </button>
+        <button class="tile t-calc" data-goto="calculators">
+          <div class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M12 11h2M16 11h2M8 15h2M12 15h2M16 15h2M8 19h2M12 19h2"/></svg></div>
+          <div class="tile-title">Calculators</div>
+          <div class="tile-desc">CrCl, vancomycin, cefazolin, gentamicin</div>
+        </button>
+        <button class="tile t-policy" data-goto="policy">
+          <div class="tile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div>
+          <div class="tile-title">Policy</div>
+          <div class="tile-desc">Restricted drugs &amp; stewardship rules</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDELINES: SYSTEMS LIST -->
+  <section class="screen" id="screen-systems">
+    <div class="page">
+      <div class="search-box" id="searchBox">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16232E" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Search a drug, pathogen, or condition…" autocomplete="off">
+        <button class="clear-btn" id="clearSearch" aria-label="Clear search">✕</button>
+      </div>
+      <div class="chip-group" id="routeChips"></div>
+      <div id="systemsList" class="list"></div>
+      <div class="empty" id="searchEmpty" style="display:none;">
+        <div class="display">No matches</div>
+        <div>Try a different drug, pathogen, or condition name.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDELINES: CONDITIONS LIST (within a system) -->
+  <section class="screen" id="screen-conditions">
+    <div class="page">
+      <div id="conditionsList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- GUIDELINES: DETAIL -->
+  <section class="screen" id="screen-detail">
+    <div class="page" id="detailContent"></div>
+  </section>
+
+  <!-- DOSING -->
+  <section class="screen" id="screen-dosing">
+    <div class="page">
+      <h2>Antimicrobial Dosing Reference</h2>
+      <div class="sub">Standard doses for normal renal function. Adjust for CrCl/eGFR — see Calculators.</div>
+      <div class="card-simple">
+        <h3>Adults — general administration</h3>
+        <table class="dose-table"><thead><tr><th>Antibiotic</th><th>Standard dose</th><th>Infusion</th></tr></thead><tbody id="doseAdultBody"></tbody></table>
+      </div>
+      <div class="card-simple">
+        <h3>Gentamicin — by weight</h3>
+        <table class="dose-table"><thead><tr><th>Weight</th><th>Dose</th><th>Infusion</th></tr></thead><tbody id="doseGentaBody"></tbody></table>
+        <div class="workup" style="margin-top:8px;">If actual weight &gt;20% above IBW: dosing weight = IBW + 0.4 × (actual weight − IBW).</div>
+      </div>
+      <div class="card-simple">
+        <h3>Pediatrics — mg/kg dosing</h3>
+        <table class="dose-table"><thead><tr><th>Antibiotic</th><th>Dose</th><th>Infusion</th></tr></thead><tbody id="dosePedsBody"></tbody></table>
+      </div>
+      <div class="card-simple">
+        <h3>Re-dosing intervals (intraoperative)</h3>
+        <table class="dose-table"><thead><tr><th>Drug</th><th>Re-dose interval</th></tr></thead><tbody id="doseRedoseBody"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALCULATORS -->
+  <section class="screen" id="screen-calculators">
+    <div class="page">
+      <h2>Calculators</h2>
+      <div class="sub">Quick bedside calculations referenced throughout the guide.</div>
+      <div class="card-simple">
+        <h3>Creatinine Clearance (Cockcroft–Gault)</h3>
+        <div class="calc-grid">
+          <div class="field"><label>Sex</label><select id="cg-sex"><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div class="field"><label>Age (years)</label><input id="cg-age" type="number" min="0" placeholder="e.g. 62"></div>
+          <div class="field"><label>Weight (kg)</label><input id="cg-weight" type="number" min="0" placeholder="e.g. 78"></div>
+          <div class="field"><label>Serum creatinine (mg/dL)</label><input id="cg-scr" type="number" step="0.01" min="0" placeholder="e.g. 1.1"></div>
+        </div>
+        <div class="calc-result" id="cg-result" style="display:none;">
+          <div class="label">Estimated CrCl</div><div class="big" id="cg-value">—</div>
+          <div class="note">Cockcroft–Gault: [(140−age) × weight × (0.85 if female)] / (72 × SCr). Use actual body weight; consider ideal/adjusted weight if obese.</div>
+        </div>
+      </div>
+      <div class="card-simple">
+        <h3>Vancomycin — surgical prophylaxis dose</h3>
+        <div class="calc-grid"><div class="field"><label>Weight (kg)</label><input id="vanco-weight" type="number" min="0" placeholder="e.g. 95"></div></div>
+        <div class="calc-result" id="vanco-result" style="display:none;">
+          <div class="label">Prophylaxis dose</div><div class="big" id="vanco-value">—</div>
+          <div class="note">1 g IV for ≤90 kg · 1.5 g IV for &gt;90 kg. Infuse over 60–90+ min. Restricted — ID consult required past 48h.</div>
+        </div>
+      </div>
+      <div class="card-simple">
+        <h3>Cefazolin — surgical prophylaxis dose</h3>
+        <div class="calc-grid"><div class="field"><label>Weight (kg)</label><input id="cefa-weight" type="number" min="0" placeholder="e.g. 130"></div></div>
+        <div class="calc-result" id="cefa-result" style="display:none;">
+          <div class="label">Prophylaxis dose</div><div class="big" id="cefa-value">—</div>
+          <div class="note">2 g IV standard · 3 g IV if &gt;120 kg. Re-dose every 4 hours intraoperatively.</div>
+        </div>
+      </div>
+      <div class="card-simple">
+        <h3>Gentamicin — prophylaxis dose by weight</h3>
+        <div class="calc-grid"><div class="field"><label>Weight (kg)</label><input id="genta-weight" type="number" min="0" placeholder="e.g. 70"></div></div>
+        <div class="calc-result" id="genta-result" style="display:none;">
+          <div class="label">Prophylaxis dose</div><div class="big" id="genta-value">—</div>
+          <div class="note" id="genta-note">Within 60 min before incision. Do not re-dose. Restricted — ID consult required past 48h.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POLICY -->
+  <section class="screen" id="screen-policy">
+    <div class="page">
+      <h2>Stewardship Policy</h2>
+      <div class="sub">Core rules from the Antimicrobial Prescribing &amp; Management Guide v1.0.0.</div>
+      <div class="rule-grid">
+        <div class="rule">✓ De-escalate within 48–72 hours whenever possible</div>
+        <div class="rule">✓ Switch IV → PO as soon as clinically able</div>
+        <div class="rule">✓ Prescribe the shortest effective course</div>
+        <div class="rule">✓ All regimens are empirical — adjust to final cultures</div>
+      </div>
+      <div class="restricted-banner">
+        <div class="label">⚠ Restricted — 48-hour rule</div>
+        <div class="drugs"><span>Gentamicin</span><span>Amikacin</span><span>Meropenem</span><span>Ertapenem (MOH)</span><span>Vancomycin</span><span>Colistin (MOH)</span></div>
+        <div class="note" style="color:#F3DAD6; margin-top:8px; font-size:12px;">If the patient still needs the antibiotic after the first 48 hours, an ID/microbiology consult is required to continue use.</div>
+      </div>
+      <div class="card-simple">
+        <h3>Screening requirements</h3>
+        <table class="dose-table"><tbody>
+          <tr><td>Transferred from another hospital</td><td>Screen for MRSA (nasal + groin) and MDRO</td></tr>
+          <tr><td>Any patient receiving an implant</td><td>Screen for MRSA (nasal + groin); treat with vancomycin for surgical pre-op prophylaxis</td></tr>
+        </tbody></table>
+      </div>
+      <div class="card-simple">
+        <h3>Stewardship oversight</h3>
+        <div style="font-size:13px; line-height:1.6; color:var(--ink);">The Antibiotic Stewardship team performs regular rounds on all inpatients to confirm policy adherence and reviews cultures as needed. Consult ID/microbiology whenever the clinical picture is unclear or a restricted agent is still required beyond 48 hours.</div>
+      </div>
+      <div class="card-simple">
+        <h3>About this app</h3>
+        <div style="font-size:12.5px; line-height:1.7; color:var(--muted);">
+          Independent, no-cost point-of-care companion to the Kuwait Hospital Antimicrobial Prescribing &amp; Management Guide v1.0.0. Installable, works offline once loaded. Currently populated: <b style="color:var(--ink);">Respiratory Tract Infections, Skin &amp; Soft Tissue, Gastrointestinal, and Genitourinary</b> infections, plus surgical-prophylaxis dosing tables. Remaining sections are being added incrementally.
+          <br><br>Does not replace clinical judgement, the full written policy, or an ID/microbiology consult.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<button class="totop" id="toTop" aria-label="Back to top">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<footer class="page-footer">Independent redesign for Kuwait Hospital Antimicrobial Stewardship — based on Guide v1.0.0.</footer>
+
+<script>
+const RESTRICTED = ["Gentamicin","Amikacin","Meropenem","Ertapenem","Vancomycin","Colistin"];
+
+const GUIDELINE_DATA = [
+{ cat:"Upper Respiratory", title:"Pharyngitis — Viral", route:"PO", workup:"Rhinitis / cough / hoarseness present → most likely viral.", rows:[
+  { pathogens:"Enterovirus, EBV, adenovirus, influenza, SARS-CoV-2, RSV",
+    first:[{name:"No antibiotics", dose:"symptomatic treatment only"}], alt:[], duration:"—" } ] },
+{ cat:"Upper Respiratory", title:"Pharyngitis — Streptococcus pyogenes", route:"PO", workup:"Send culture swab or RADT if available.", rows:[
+  { pathogens:"Streptococcus pyogenes",
+    first:[{name:"Amoxicillin",dose:"500 mg PO q8h"},{name:"Augmentin",dose:"875/125 mg PO BD"},{name:"Clindamycin",dose:"300 mg PO q8h"}],
+    alt:[{name:"Azithromycin",dose:"500 mg PO OD × 5 days"}], duration:"7 days" } ] },
+{ cat:"Upper Respiratory", title:"Sinusitis", route:"PO", workup:"Symptoms > 10 days suggest bacterial cause.", rows:[
+  { pathogens:"Viral / allergic", first:[{name:"Oral fluids + nasal saline",dose:"irrigation as needed"}], alt:[], duration:"—" },
+  { pathogens:"Streptococcus spp., H. influenzae, M. catarrhalis",
+    first:[{name:"Amoxicillin",dose:"500 mg PO q8h"},{name:"Augmentin",dose:"875/125 mg PO BD"}], alt:[], duration:"5–7 days" } ] },
+{ cat:"Otitis", title:"Otitis Media", route:"PO", workup:null, rows:[
+  { pathogens:"Viral", first:[{name:"No antibiotics",dose:"supportive care"}], alt:[], duration:"—" },
+  { pathogens:"S. pneumoniae, H. influenzae, M. catarrhalis",
+    first:[{name:"Augmentin",dose:"1 g PO BD"}], alt:[{name:"Moxifloxacin",dose:"400 mg PO OD"}], duration:"7 days" } ] },
+{ cat:"Otitis", title:"Malignant Otitis Externa", route:"MIX", workup:"Requires surgical debridement + culture; CT/MRI if severe.", rows:[
+  { pathogens:"Pseudomonas aeruginosa",
+    first:[{name:"Ciprofloxacin",dose:"500 mg PO BD"},{name:"Levofloxacin",dose:"750 mg PO OD"}],
+    alt:[{name:"Cefepime",dose:"2 g IV q8h (severe)"},{name:"Piperacillin-tazobactam",dose:"4.5 g IV q6h (severe)"}], duration:"Per severity" } ] },
+{ cat:"CAP", title:"CAP — Outpatient, no co-morbidities", route:"PO", workup:"Calculate CURB-65 first.", rows:[
+  { pathogens:"S. pneumoniae, H. influenzae, M. catarrhalis",
+    first:[{name:"Augmentin",dose:"1 g PO BD"},{name:"Cefuroxime",dose:"500 mg PO BD"}],
+    alt:[{name:"Azithromycin",dose:"500 mg ×1, then 250 mg OD × 4d"},{name:"Doxycycline",dose:"100 mg PO BD"}], duration:"5–7 days" } ] },
+{ cat:"CAP", title:"CAP — Outpatient, with co-morbidities", route:"PO", workup:null, rows:[
+  { pathogens:"S. pneumoniae, H. influenzae, M. catarrhalis",
+    first:[{name:"Augmentin",dose:"1 g PO BD"},{name:"Cefuroxime + Azithromycin",dose:"500 mg BD + 500→250 mg OD"}],
+    alt:[{name:"Levofloxacin",dose:"750 mg PO OD"},{name:"Moxifloxacin",dose:"400 mg PO OD"}], duration:"5–7 days" } ] },
+{ cat:"CAP", title:"CAP — Inpatient", route:"IV", workup:"Send 2× blood cultures, urine for atypicals, NP swab (COVID/RSV/Flu), sputum culture, creatinine, WBC, PCT.", rows:[
+  { pathogens:"S. pneumoniae, H. influenzae, Legionella",
+    first:[{name:"Ceftriaxone",dose:"2 g IV OD"},{name:"Cefotaxime + Azithromycin",dose:"2 g IV q8h + 500→250 mg OD"}],
+    alt:[{name:"Levofloxacin",dose:"750 mg PO OD"},{name:"Moxifloxacin",dose:"400 mg PO OD"}], duration:"5–7 days" } ] },
+{ cat:"CAP", title:"CAP — Suspected MRSA", route:"IV", workup:"Previous culture with MRSA or MRSA screening positive.", rows:[
+  { pathogens:"MRSA",
+    first:[{name:"Vancomycin",dose:"per vancomycin protocol / ID consult"},{name:"Linezolid",dose:"600 mg PO BD"}],
+    alt:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab PO BD"},{name:"Doxycycline",dose:"100 mg PO BD"}], duration:"7–10 days" } ] },
+{ cat:"CAP", title:"CAP — Suspected Pseudomonas", route:"MIX", workup:"CF, COPD, bronchiectasis, or previous culture with pseudomonas.", rows:[
+  { pathogens:"Pseudomonas aeruginosa",
+    first:[{name:"Levofloxacin",dose:"750 mg PO OD"},{name:"Ciprofloxacin",dose:"500 mg PO BD"}],
+    alt:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q6h (severe)"},{name:"Cefepime",dose:"2 g IV q8h (severe, PCN-allergic)"}], duration:"5–7 days" } ] },
+{ cat:"CAP", title:"CAP — Secondary bacterial (post-flu/COVID)", route:"IV", workup:null, rows:[
+  { pathogens:"MRSA, S. aureus, S. pneumoniae",
+    first:[{name:"Vancomycin",dose:"per vancomycin protocol / ID consult"}], alt:[{name:"Linezolid",dose:"600 mg PO BD"}], duration:"7 days" } ] },
+{ cat:"CAP", title:"CAP — Viral (COVID-19)", route:"PO", workup:null, rows:[
+  { pathogens:"SARS-CoV-2", first:[{name:"Supportive care",dose:"no antibiotics; transfer to MOH"}], alt:[], duration:"—" } ] },
+{ cat:"CAP", title:"CAP — Viral (Influenza)", route:"PO", workup:null, rows:[
+  { pathogens:"Influenza A/B", first:[{name:"Oseltamivir",dose:"75 mg PO BD"}], alt:[], duration:"5 days" } ] },
+{ cat:"CAP", title:"CAP — Viral (RSV)", route:"PO", workup:null, rows:[
+  { pathogens:"RSV", first:[{name:"Supportive care",dose:"no antibiotics"}], alt:[], duration:"—" } ] },
+{ cat:"HAP/VAP", title:"Hospital-Acquired / Ventilator-Associated Pneumonia", route:"IV",
+  workup:"New infiltrate ≥48h post-admission + fever/productive cough/rising O₂ needs → send ETT or sputum culture, PCT, CBC, blood culture.", rows:[
+  { pathogens:"Klebsiella, Enterobacter, Serratia, Pseudomonas, Acinetobacter, E. coli",
+    first:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q6h"},{name:"Cefepime",dose:"2 g IV q8h (PCN-allergic)"}],
+    alt:[{name:"Levofloxacin",dose:"750 mg IV/PO q24h"},{name:"Meropenem",dose:"if high risk ESBL — consult ID"}], duration:"7 days" } ] },
+{ cat:"HAP/VAP", title:"HAP/VAP — MRSA screen positive", route:"IV", workup:null, rows:[
+  { pathogens:"MRSA", first:[{name:"Vancomycin",dose:"per vancomycin protocol / ID consult"}], alt:[{name:"Linezolid",dose:"600 mg PO BD"}], duration:"7 days" } ] },
+{ cat:"PJP / Abscess", title:"Pneumocystis Pneumonia (PJP)", route:"IV",
+  workup:"Immunocompromised (HIV CD4<200, transplant, chemo, ≥20mg prednisone >1mo). Send sputum PCR/DFA, β-D-glucan, or silver stain.", rows:[
+  { pathogens:"Pneumocystis jiroveci",
+    first:[{name:"Trimethoprim-sulfamethoxazole",dose:"2 DS tabs PO q8h × 21d + prednisone taper"}],
+    alt:[{name:"If unavailable",dose:"transfer to MOH"}], duration:"21 days" } ] },
+{ cat:"PJP / Abscess", title:"Lung Abscess", route:"IV", workup:"Requires drainage + culture; adjust to sensitivities.", rows:[
+  { pathogens:"S. aureus, Streptococcus spp., Enterobacteriaceae, anaerobes",
+    first:[{name:"Ceftriaxone + Vancomycin",dose:"2 g IV BD + 1 g IV BD"}],
+    alt:[{name:"Vancomycin + Cefepime + Metronidazole",dose:"1g BD + 2g q8h + 500mg q8h"}], duration:"4–6 weeks" } ] },
+{ cat:"PJP / Abscess", title:"Empyema", route:"IV", workup:"Requires drainage; send culture + pH.", rows:[
+  { pathogens:"Acute: S. aureus, MRSA, Streptococcus spp. · Chronic: Enterobacteriaceae, anaerobes, TB",
+    first:[{name:"Ceftriaxone + Vancomycin",dose:"2 g IV BD + 1 g IV BD"}],
+    alt:[{name:"Vancomycin + Cefepime + Metronidazole",dose:"1g BD + 2g q8h + 500mg q8h"}], duration:"4–6 weeks" } ] },
+
+/* ---------------- Skin & Soft Tissue Infections ---------------- */
+{ cat:"Skin & Soft Tissue", title:"Cellulitis — erythema, no induration/abscess", route:"PO", workup:null, rows:[
+  { pathogens:"Staphylococcus aureus (MSSA), Streptococcus spp.",
+    first:[{name:"Augmentin",dose:"1 g PO BD"}],
+    alt:[{name:"Cefuroxime",dose:"PCN-allergic"},{name:"Ceftriaxone",dose:"2 g IV OD (if severe)"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Cellulitis — erythema with induration/abscess", route:"PO", workup:"Drain abscess and send culture; adjust to sensitivities.", rows:[
+  { pathogens:"Staphylococcus aureus (MRSA)",
+    first:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab PO BD"},{name:"Clindamycin",dose:"600 mg PO TDS"}],
+    alt:[{name:"Doxycycline",dose:"100 mg PO BD"},{name:"Vancomycin",dose:"if severe"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Carbuncles/Furuncles/Abscess — Outpatient MRSA", route:"PO", workup:"Drain abscess if present and send culture.", rows:[
+  { pathogens:"Staphylococcus aureus (MRSA)",
+    first:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab PO BD"},{name:"Clindamycin",dose:"450 mg PO q8h"}],
+    alt:[{name:"Doxycycline",dose:"100 mg PO BD"},{name:"Vancomycin",dose:"if severe"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Carbuncles/Furuncles/Abscess — Outpatient MSSA/Strep", route:"PO", workup:"Drain abscess if present and send culture.", rows:[
+  { pathogens:"Staphylococcus aureus (MSSA), Streptococcus spp.",
+    first:[{name:"Augmentin",dose:"1 g PO BD"},{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab PO BD"}],
+    alt:[{name:"Doxycycline",dose:"100 mg PO BD"},{name:"Clindamycin",dose:"450 mg PO q8h"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Carbuncles/Furuncles/Abscess — Inpatient", route:"IV", workup:"Drain abscess if present and send culture.", rows:[
+  { pathogens:"S. aureus (MSSA, MRSA), Streptococcus spp.",
+    first:[{name:"Ceftriaxone",dose:"2 g IV OD"},{name:"Clindamycin",dose:"450 mg PO q8h"}],
+    alt:[{name:"Vancomycin",dose:"1 g IV BD"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Necrotizing Fasciitis", route:"IV", workup:"Emergent surgical debridement + tissue culture; adjust to culture.", rows:[
+  { pathogens:"Streptococcus pyogenes, S. aureus, Clostridial spp., anaerobes, Klebsiella, E. coli",
+    first:[{name:"Clindamycin + Piperacillin-tazobactam + Vancomycin",dose:"900mg q8h + 4.5g + 1g BD"},{name:"Clindamycin + Ceftriaxone + Vancomycin",dose:"900mg q8h + 2g OD + 1g BD"}],
+    alt:[{name:"Clindamycin + Meropenem + Vancomycin",dose:"if high risk ESBL"}], duration:"Until controlled" } ] },
+{ cat:"Skin & Soft Tissue", title:"Pyomyositis", route:"IV", workup:"Requires drainage + culture.", rows:[
+  { pathogens:"Streptococcus spp., S. aureus (MSSA, MRSA)",
+    first:[{name:"Vancomycin",dose:"1 g IV BD"}], alt:[{name:"Cefazolin",dose:"2 g IV q8h"}], duration:"10–14 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Animal Bite", route:"PO", workup:null, rows:[
+  { pathogens:"Streptococcus spp., S. aureus, anaerobes",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"}], alt:[{name:"Moxifloxacin",dose:"400 mg PO OD (PCN-allergic)"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Mastitis", route:"PO", workup:"Drain if abscess present and send culture.", rows:[
+  { pathogens:"Streptococcus spp., S. aureus",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"}],
+    alt:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab PO BD"},{name:"Clindamycin",dose:"450 mg PO q8h"}], duration:"5–7 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Diabetic Foot — Outpatient mild", route:"PO", workup:"Debridement + tissue culture; adjust to culture.", rows:[
+  { pathogens:"Streptococcus spp., S. aureus",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"},{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab PO BD (PCN-allergic)"}],
+    alt:[{name:"Doxycycline",dose:"100 mg PO BD"},{name:"Clindamycin",dose:"300 mg PO q8h"}], duration:"7–14 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Diabetic Foot — Outpatient mild, recent antibiotic exposure", route:"PO", workup:"Gram-positive cocci / Gram-negative bacilli likely.", rows:[
+  { pathogens:"Streptococcus spp., S. aureus, Gram-negative bacilli",
+    first:[{name:"Augmentin + Ciprofloxacin",dose:"1 tab BD + 500 mg BD"},{name:"Bactrim + Ciprofloxacin",dose:"1 DS BD + 500 mg BD"}],
+    alt:[{name:"Doxycycline + Levofloxacin",dose:"100mg BD + 750mg OD"}], duration:"7–14 days" } ] },
+{ cat:"Skin & Soft Tissue", title:"Diabetic Foot — Moderate/severe, no complicating features", route:"MIX", workup:null, rows:[
+  { pathogens:"Streptococcus spp., S. aureus, Gram-negative bacilli",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"},{name:"Ceftriaxone",dose:"2 g IV OD (PCN-allergic)"}],
+    alt:[{name:"Cefotaxime",dose:"2 g IV q8h"}], duration:"7–14 days (longer if osteomyelitis)" } ] },
+{ cat:"Skin & Soft Tissue", title:"Diabetic Foot — Moderate/severe, recent admission (MRSA)", route:"IV", workup:null, rows:[
+  { pathogens:"Gram-negative bacilli, MRSA",
+    first:[{name:"Piperacillin-tazobactam + Vancomycin",dose:"standard + 1g BD"},{name:"Ciprofloxacin + Vancomycin",dose:"500mg BD + 1g BD (PCN-allergic)"}],
+    alt:[{name:"Meropenem",dose:"1 g IV q8h if previous ESBL"}], duration:"2–4 weeks" } ] },
+{ cat:"Skin & Soft Tissue", title:"Diabetic Foot — Moderate/severe, limb ischemia/necrosis", route:"IV", workup:null, rows:[
+  { pathogens:"Gram-negative bacilli, Gram-positive cocci, anaerobes",
+    first:[{name:"Vancomycin + Ceftriaxone",dose:"1g BD + 2g OD (PCN-allergic)"},{name:"Vancomycin + Piperacillin-tazobactam",dose:"if recent admission/antibiotics"}],
+    alt:[{name:"Vancomycin + Meropenem",dose:"1 g q8h if previous ESBL"}], duration:"2–4 weeks" } ] },
+
+/* ---------------- Gastrointestinal Infections ---------------- */
+{ cat:"Gastrointestinal", title:"Gastroenteritis — Mild/moderate", route:"PO", workup:"Typically viral.", rows:[
+  { pathogens:"Viral", first:[{name:"Supportive care",dose:"no antibiotic therapy indicated"}], alt:[], duration:"—" } ] },
+{ cat:"Gastrointestinal", title:"Gastroenteritis — Moderate/severe", route:"MIX", workup:"Send stool culture.", rows:[
+  { pathogens:"Salmonella, Shigella, Campylobacter",
+    first:[{name:"Ceftriaxone",dose:"2 g IV OD"},{name:"Ciprofloxacin",dose:"500 mg PO BD"}],
+    alt:[{name:"Azithromycin",dose:"500 mg PO OD"}], duration:"3–5 days" } ] },
+{ cat:"Gastrointestinal", title:"Clostridium difficile", route:"PO", workup:"Send stool for C. difficile.", rows:[
+  { pathogens:"Clostridium difficile",
+    first:[{name:"Vancomycin (oral)",dose:"125 mg PO q6h"}], alt:[{name:"Vancomycin (oral, severe)",dose:"500 mg PO q6h"}], duration:"10 days" } ] },
+{ cat:"Gastrointestinal", title:"Perforated Appendicitis/Abscess — mild/moderate", route:"IV", workup:null, rows:[
+  { pathogens:"Gram-negative bacilli, anaerobes",
+    first:[{name:"Ceftriaxone + Metronidazole",dose:"2g OD + 500mg q8h"},{name:"Ciprofloxacin + Metronidazole",dose:"400mg IV BD + 500mg IV q8h (PCN-allergic)"}],
+    alt:[{name:"Moxifloxacin",dose:"400 mg IV/PO OD"}], duration:"5–7 days" } ] },
+{ cat:"Gastrointestinal", title:"Perforated Appendicitis — Severe (peritonitis/septic shock)", route:"IV", workup:null, rows:[
+  { pathogens:"Gram-negative bacilli, anaerobes",
+    first:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q8h"},{name:"Cefepime",dose:"2 g IV q8h (PCN-allergic)"}],
+    alt:[{name:"Meropenem",dose:"1 g IV q8h if ESBL"}], duration:"7 days" } ] },
+{ cat:"Gastrointestinal", title:"Severe Cholangitis", route:"IV", workup:null, rows:[
+  { pathogens:"Gram-negative bacilli, anaerobes",
+    first:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q8h"},{name:"Cefepime + Metronidazole",dose:"2g q12h + 500mg (PCN-allergic)"}],
+    alt:[{name:"Meropenem",dose:"1 g IV q8h"},{name:"Moxifloxacin",dose:"400 mg PO OD"}], duration:"5–7 days" } ] },
+{ cat:"Gastrointestinal", title:"Acute Cholecystitis", route:"IV", workup:null, rows:[
+  { pathogens:"Anaerobes, Enterobacteriaceae, Enterobacter, Bacteroides",
+    first:[{name:"Ceftriaxone + Metronidazole",dose:"2g OD + 500mg IV/PO q8h"},{name:"Cefepime + Metronidazole",dose:"2g q12h + 500mg q8h"}],
+    alt:[{name:"Ciprofloxacin + Metronidazole",dose:"—"},{name:"Piperacillin-tazobactam",dose:"4.5 g IV q8h"}], duration:"7 days" } ] },
+{ cat:"Gastrointestinal", title:"Spontaneous Bacterial Peritonitis", route:"IV", workup:"Do paracentesis and send for workup.", rows:[
+  { pathogens:"E. coli, Enterobacteriaceae, Enterococcus spp., Streptococcus spp.",
+    first:[{name:"Ceftriaxone",dose:"2 g IV OD"},{name:"Cefotaxime",dose:"2 g IV q8h"}],
+    alt:[{name:"Ciprofloxacin",dose:"400 mg IV BD"},{name:"Piperacillin-tazobactam",dose:"4.5 g IV q8h"}], duration:"7 days" } ] },
+{ cat:"Gastrointestinal", title:"Pancreatitis", route:"PO", workup:null, rows:[
+  { pathogens:"—", first:[{name:"No antimicrobial treatment",dose:"supportive care only"}], alt:[], duration:"—" } ] },
+{ cat:"Gastrointestinal", title:"Acute Severe Necrotizing Pancreatitis/Abscess", route:"IV", workup:null, rows:[
+  { pathogens:"Anaerobes, Enterobacteriaceae, Enterobacter, Bacteroides",
+    first:[{name:"Ciprofloxacin + Metronidazole",dose:"PCN-allergic"}], alt:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q8h"}], duration:"7 days" } ] },
+{ cat:"Gastrointestinal", title:"Perirectal Abscess", route:"MIX", workup:"Requires drainage + culture.", rows:[
+  { pathogens:"Anaerobes, Enterobacteriaceae, Enterobacter, Bacteroides",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"},{name:"Ciprofloxacin + Metronidazole",dose:"—"}],
+    alt:[{name:"Moxifloxacin",dose:"400 mg PO OD"},{name:"Cefepime + Metronidazole",dose:"2g q12h + 1g q12h"}], duration:"7–10 days" } ] },
+{ cat:"Gastrointestinal", title:"Diverticulitis — Outpatient mild", route:"PO", workup:null, rows:[
+  { pathogens:"Enterobacteriaceae, Enterococcus, Bacteroides",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"},{name:"Ciprofloxacin + Metronidazole",dose:"—"}],
+    alt:[{name:"Moxifloxacin",dose:"400 mg PO OD"}], duration:"7–10 days" } ] },
+{ cat:"Gastrointestinal", title:"Diverticulitis — Inpatient mild/moderate", route:"IV", workup:null, rows:[
+  { pathogens:"Enterobacteriaceae, Enterococcus, Bacteroides",
+    first:[{name:"Moxifloxacin",dose:"400 mg PO OD"},{name:"Ciprofloxacin + Metronidazole",dose:"—"}],
+    alt:[{name:"Cefepime",dose:"2 g IV q12h ± metronidazole"}], duration:"7–10 days" } ] },
+{ cat:"Gastrointestinal", title:"Diverticulitis — Inpatient severe", route:"IV", workup:null, rows:[
+  { pathogens:"Enterobacteriaceae, Enterococcus, Bacteroides",
+    first:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q6h"},{name:"Cefepime",dose:"2 g IV q8h (PCN-allergic)"}],
+    alt:[{name:"Meropenem",dose:"1 g IV q8h if ESBL"}], duration:"7–10 days" } ] },
+{ cat:"Gastrointestinal", title:"Gastric Ulcer (H. pylori)", route:"PO", workup:"Triple or quadruple therapy is effective.", rows:[
+  { pathogens:"Helicobacter pylori",
+    first:[{name:"Pylera + PPI",dose:"per pack"}],
+    alt:[{name:"PPI + Augmentin + Metronidazole + Clarithromycin",dose:"1g BD + std + 500mg BD"}], duration:"7–10 days" } ] },
+{ cat:"Gastrointestinal", title:"Liver Abscess", route:"IV", workup:"Drain and send culture; adjust to culture.", rows:[
+  { pathogens:"Klebsiella spp., Bacteroides spp., Enterobacteriaceae, Enterococcus spp.",
+    first:[{name:"Ceftriaxone + Metronidazole",dose:"2g OD + 500mg IV/PO q8h (PCN-allergic)"}],
+    alt:[{name:"Piperacillin-tazobactam",dose:"3.375 g IV q6h if severe"},{name:"Ciprofloxacin + Metronidazole",dose:"400mg IV BD + 500mg q8h"}], duration:"10–14 days" } ] },
+
+/* ---------------- Genitourinary Infections ---------------- */
+{ cat:"Genitourinary", title:"Asymptomatic Bacteriuria / Candiduria", route:"PO", workup:"Only treat if pregnant or undergoing invasive urologic procedure.", rows:[
+  { pathogens:"E. coli, Gram-negative bacilli, Enterococcus spp.",
+    first:[{name:"No treatment needed",dose:"unless pregnant / pre-procedure"}], alt:[], duration:"—" } ] },
+{ cat:"Genitourinary", title:"Lower UTI / Cystitis", route:"PO", workup:"Send urine analysis; culture if positive.", rows:[
+  { pathogens:"Streptococcus agalactiae, E. coli, Klebsiella spp., Enterococcus spp.",
+    first:[{name:"Nitrofurantoin",dose:"100 mg PO BD"},{name:"Augmentin",dose:"1 tab PO BD"}],
+    alt:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab BD"},{name:"Ciprofloxacin",dose:"500 mg PO BD"}], duration:"3–5 days" } ] },
+{ cat:"Genitourinary", title:"Complicated UTI", route:"MIX", workup:"Change foley if present; culture only if symptomatic.", rows:[
+  { pathogens:"Streptococcus agalactiae, E. coli, Klebsiella spp., Enterococcus spp.",
+    first:[{name:"Ciprofloxacin",dose:"500 mg PO BD"},{name:"Ceftriaxone",dose:"2 g IV OD (PCN-allergic)"}],
+    alt:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab BD"},{name:"Cefepime",dose:"2 g IV BD"},{name:"Piperacillin-tazobactam",dose:"if prior resistance/recent admission"}], duration:"5–7 days" } ] },
+{ cat:"Genitourinary", title:"Pyelonephritis — low risk of resistance", route:"MIX", workup:"Send urine culture.", rows:[
+  { pathogens:"E. coli, Klebsiella spp., Proteus, Enterococcus spp.",
+    first:[{name:"Ciprofloxacin",dose:"500 mg PO BD"},{name:"Ceftriaxone",dose:"2 g IV OD (PCN-allergic)"}],
+    alt:[{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab BD"}], duration:"7–10 days" } ] },
+{ cat:"Genitourinary", title:"Pyelonephritis — high risk of resistance", route:"IV", workup:"Send urine culture.", rows:[
+  { pathogens:"E. coli, Klebsiella spp., Proteus, Enterococcus spp., Pseudomonas",
+    first:[{name:"Piperacillin-tazobactam",dose:"4.5 g IV q6h"},{name:"Cefepime",dose:"2 g IV BD (PCN-allergic)"}],
+    alt:[{name:"Meropenem",dose:"1 g IV q8h if ESBL"}], duration:"7–14 days" } ] },
+{ cat:"Genitourinary", title:"Prostatitis", route:"MIX", workup:"Send urine culture.", rows:[
+  { pathogens:"E. coli, Klebsiella spp., Pseudomonas, Enterococcus spp.",
+    first:[{name:"Ciprofloxacin",dose:"500 mg PO BD"},{name:"Levofloxacin",dose:"750 mg PO OD"}],
+    alt:[{name:"Ceftriaxone",dose:"2 g IV OD"},{name:"Trimethoprim-sulfamethoxazole",dose:"1 DS tab BD"}], duration:"2–4 weeks" } ] },
+{ cat:"Genitourinary", title:"Epididymitis-Orchitis", route:"PO", workup:"Send urine culture.", rows:[
+  { pathogens:"Enterobacterales",
+    first:[{name:"Augmentin",dose:"1 tab PO BD"},{name:"Ciprofloxacin",dose:"500 mg PO BD (PCN-allergic)"}],
+    alt:[{name:"Levofloxacin",dose:"750 mg PO OD"},{name:"Ceftriaxone",dose:"2 g IV OD"}], duration:"7–10 days" } ] },
+];
+
+// Sections not yet transcribed — shown disabled in sidebar so scope/roadmap is visible.
+const COMING_SOON = ["Cardiovascular","Orthopedic","Surgical Site","ENT","OB/Gyn","Sexually Transmitted","CNS","Ophthalmology","Pediatrics"];
+
+const DOSE_ADULT = [
+  ["Amoxicillin/clavulanic acid","Oral 1750/250 mg (2 tabs)","—"],
+  ["Azithromycin","Oral 500 mg","—"],
+  ["Cefazolin","IV 2 g (3 g if >120 kg)","Push 3–5 min or infuse 30 min"],
+  ["Ceftriaxone","IV 2 g (1 g for endocarditis ppx)","Push 5 min or infuse 30 min"],
+  ["Clindamycin","IV 900 mg","10–60 min, max 30 mg/min"],
+  ["Ciprofloxacin","IV 400 mg","Over 60 min"],
+  ["Levofloxacin","IV 500 mg","Over 60 min"],
+  ["Metronidazole","IV 500 mg","Over 30 min"],
+  ["Vancomycin","IV 1 g (≤90 kg) / 1.5 g (>90 kg)","60–90+ min, max 5 mg/mL"],
+];
+const DOSE_GENTA = [["45–64 kg","160 mg IV","30–120 min"],["65–74 kg","240 mg IV","30–120 min"],["75–85 kg","320 mg IV","30–120 min"]];
+const DOSE_PEDS = [
+  ["Amoxicillin/clavulanic acid","Oral 50 mg/kg (amox component)","—"],
+  ["Cefazolin","IV 30 mg/kg (50 mg/kg endocarditis ppx)","Push 3–5 min or infuse 30 min"],
+  ["Clindamycin","IV 10 mg/kg","10–60 min"],
+  ["Ciprofloxacin","IV 10 mg/kg","Over 60 min"],
+  ["Gentamicin","IV 2.5 mg/kg","Over 30 min"],
+  ["Metronidazole","IV 15 mg/kg","Over 30 min"],
+  ["Vancomycin","IV 15 mg/kg","60–90+ min, max 5 mg/mL"],
+];
+const DOSE_REDOSE = [["Cefazolin","4 hours"],["Ceftriaxone","NA"],["Clindamycin","6 hours"],["Ciprofloxacin","NA"],["Gentamicin","Do not re-dose"],["Levofloxacin","NA"],["Metronidazole","NA"],["Vancomycin","NA"]];
+
+
+/* ============================================================
+   NAV CONTROLLER — home → systems → conditions → detail
+   (plus direct-from-home: dosing / calculators / policy)
+============================================================ */
+const ROUTE_META = { PO:{label:"PO",fg:"var(--green)",bg:"var(--green-tint)"}, IV:{label:"IV",fg:"var(--navy)",bg:"var(--navy-tint)"}, MIX:{label:"PO/IV",fg:"var(--teal)",bg:"var(--teal-tint)"} };
+const ROUTE_HEX = { PO:"#1E7A46", IV:"#0B2E4F", MIX:"#0E7C7B" };
+const CAT_ORDER = Array.from(new Set(GUIDELINE_DATA.map(d=>d.cat)));
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+GUIDELINE_DATA.forEach(d => d.id = "c-" + slug(d.title));
+
+const SCREEN_META = {
+  home:        { title:"Antimicrobial Guide", eyebrow:"Kuwait Hospital", showLogo:true },
+  systems:     { title:"Guidelines", eyebrow:"Browse by system", showLogo:false },
+  conditions:  { title:"", eyebrow:"Guidelines", showLogo:false },
+  detail:      { title:"", eyebrow:"", showLogo:false },
+  dosing:      { title:"Dosing Reference", eyebrow:"Antimicrobial Guide", showLogo:false },
+  calculators: { title:"Calculators", eyebrow:"Antimicrobial Guide", showLogo:false },
+  policy:      { title:"Policy", eyebrow:"Antimicrobial Guide", showLogo:false },
+};
+
+let navStack = [{ screen:"home" }];
+const state = { route:"All", query:"" };
+
+function esc(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function highlight(text){
+  if(!state.query) return esc(text);
+  const re = new RegExp("("+state.query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+")","ig");
+  return esc(text).replace(re, "<mark>$1</mark>");
+}
+function drugName(name){
+  const isRestricted = RESTRICTED.some(r => name.toLowerCase().includes(r.toLowerCase()));
+  return `<span class="drug-name">${highlight(name)}</span>${isRestricted ? '<span class="restricted-badge">ID &gt;48h</span>' : ''}`;
+}
+function cardHasRestricted(card){ return card.rows.some(r => [...r.first, ...r.alt].some(d => RESTRICTED.some(x => d.name.toLowerCase().includes(x.toLowerCase())))); }
+function textMatch(card){
+  if(!state.query) return true;
+  const hay = [card.title, card.cat, ...card.rows.flatMap(r=>[r.pathogens, ...r.first.map(d=>d.name+" "+d.dose), ...r.alt.map(d=>d.name+" "+d.dose)])].join(" ").toLowerCase();
+  return hay.includes(state.query.toLowerCase());
+}
+function routeMatch(card){ if(state.route==="All") return true; if(state.route==="RESTRICTED") return cardHasRestricted(card); return card.route===state.route; }
+function scopedMatch(card){ return routeMatch(card) && textMatch(card); }
+
+function pushScreen(entry){
+  navStack.push(entry);
+  history.pushState({ depth: navStack.length }, "", "#" + entry.screen + (entry.cat ? ":"+slug(entry.cat) : "") + (entry.id ? ":"+entry.id : ""));
+  render();
+  window.scrollTo({top:0, behavior:"instant"});
+}
+function goBack(){ if(navStack.length>1) history.back(); }
+window.addEventListener("popstate", ()=>{
+  if(navStack.length>1) navStack.pop();
+  render();
+  window.scrollTo({top:0, behavior:"instant"});
+});
+
+document.getElementById("backBtn").addEventListener("click", goBack);
+document.querySelectorAll("[data-goto]").forEach(btn=>{
+  btn.addEventListener("click", ()=> pushScreen({ screen: btn.dataset.goto }));
+});
+
+function render(){
+  const top = navStack[navStack.length-1];
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+
+  document.getElementById("backBtn").classList.toggle("show", navStack.length>1);
+  document.getElementById("appbarLogo").style.display = top.screen==="home" ? "block" : "none";
+
+  let meta = SCREEN_META[top.screen] || {title:"",eyebrow:""};
+  let titleText = meta.title, eyebrowText = meta.eyebrow;
+
+  if(top.screen === "conditions"){ titleText = top.cat; eyebrowText = "Guidelines"; }
+  if(top.screen === "detail"){
+    const card = GUIDELINE_DATA.find(d=>d.id===top.id);
+    titleText = card ? card.title : "";
+    eyebrowText = card ? card.cat : "Guidelines";
+  }
+  document.getElementById("appbarTitle").textContent = titleText;
+  document.getElementById("appbarEyebrow").textContent = eyebrowText;
+
+  document.getElementById("screen-"+top.screen).classList.add("active");
+
+  if(top.screen==="systems") renderSystems();
+  if(top.screen==="conditions") renderConditions(top.cat);
+  if(top.screen==="detail") renderDetail(top.id);
+}
+
+/* ---------------- SYSTEMS SCREEN ---------------- */
+function renderRouteChips(){
+  const el = document.getElementById("routeChips");
+  const defs = [{k:"All",label:"All routes"},{k:"PO",label:"PO"},{k:"IV",label:"IV"},{k:"MIX",label:"PO or IV"},{k:"RESTRICTED",label:"⚠ Restricted"}];
+  el.innerHTML = defs.map(d => `<button class="chip ${d.k==='RESTRICTED'?'restricted-chip':''} ${state.route===d.k?'active':''}" data-route="${d.k}">${d.label}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(btn=> btn.addEventListener("click", ()=>{ state.route = btn.dataset.route; renderSystems(); }));
+}
+
+function renderSystems(){
+  renderRouteChips();
+  const listEl = document.getElementById("systemsList");
+  const emptyEl = document.getElementById("searchEmpty");
+
+  if(state.query){
+    // flat cross-category search results
+    const results = GUIDELINE_DATA.filter(d => scopedMatch(d));
+    if(results.length===0){ listEl.innerHTML=""; emptyEl.style.display="block"; return; }
+    emptyEl.style.display = "none";
+    listEl.innerHTML = results.map(d => conditionRowHTML(d, true)).join("");
+    listEl.querySelectorAll(".row[data-id]").forEach(row=>{
+      row.addEventListener("click", ()=> pushScreen({ screen:"detail", id: row.dataset.id }));
+    });
+    return;
+  }
+
+  emptyEl.style.display = "none";
+  const rows = CAT_ORDER.map(cat=>{
+    const items = GUIDELINE_DATA.filter(d => d.cat===cat && routeMatch(d));
+    const total = GUIDELINE_DATA.filter(d => d.cat===cat).length;
+    return `<button class="row" data-cat="${esc(cat)}">
+      <span class="row-dot" style="background:var(--teal)"></span>
+      <span class="row-main"><div class="row-title">${esc(cat)}</div><div class="row-sub">${items.length} condition${items.length===1?'':'s'}</div></span>
+      <span class="row-count">${items.length}${items.length!==total?'/'+total:''}</span>
+      <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+    </button>`;
+  }).join("");
+  const soon = COMING_SOON.map(c => `<div class="row disabled">
+      <span class="row-dot" style="background:var(--faint)"></span>
+      <span class="row-main"><div class="row-title">${esc(c)}</div></span>
+      <span class="soon-badge">Soon</span>
+    </div>`).join("");
+  listEl.innerHTML = rows + soon;
+  listEl.querySelectorAll(".row[data-cat]").forEach(row=>{
+    row.addEventListener("click", ()=> pushScreen({ screen:"conditions", cat: row.dataset.cat }));
+  });
+}
+
+/* ---------------- CONDITIONS SCREEN (within one system) ---------------- */
+function conditionRowHTML(d, showCatSub){
+  const rm = ROUTE_META[d.route];
+  const lastRow = d.rows[d.rows.length-1];
+  return `<button class="row" data-id="${d.id}">
+    <span class="row-dot" style="background:${ROUTE_HEX[d.route]}"></span>
+    <span class="row-main">
+      <div class="row-title">${highlight(d.title)}</div>
+      <div class="row-sub">${showCatSub ? esc(d.cat)+" · " : ""}${esc(lastRow.duration)}</div>
+    </span>
+    <span class="route-tag" style="background:${rm.bg}; color:${rm.fg}">${rm.label}</span>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+  </button>`;
+}
+function renderConditions(cat){
+  const items = GUIDELINE_DATA.filter(d => d.cat===cat);
+  const listEl = document.getElementById("conditionsList");
+  listEl.innerHTML = items.map(d => conditionRowHTML(d, false)).join("");
+  listEl.querySelectorAll(".row[data-id]").forEach(row=>{
+    row.addEventListener("click", ()=> pushScreen({ screen:"detail", id: row.dataset.id }));
+  });
+}
+
+/* ---------------- DETAIL SCREEN ---------------- */
+function renderDetail(id){
+  const card = GUIDELINE_DATA.find(d=>d.id===id);
+  const el = document.getElementById("detailContent");
+  if(!card){ el.innerHTML = `<div class="empty"><div class="display">Not found</div></div>`; return; }
+  const rm = ROUTE_META[card.route];
+  const rows = card.rows.map(r=>{
+    const firstHtml = r.first.length ? r.first.map(d=>`<div class="drug-line">${drugName(d.name)} <span class="drug-dose">${highlight(d.dose)}</span></div>`).join("") : `<div class="drug-line" style="color:var(--faint)">—</div>`;
+    const altHtml = r.alt.length ? r.alt.map(d=>`<div class="drug-line">${drugName(d.name)} <span class="drug-dose">${highlight(d.dose)}</span></div>`).join("") : `<div class="drug-line" style="color:var(--faint)">—</div>`;
+    return `<div class="rowset"><div class="pathogens">${highlight(r.pathogens)}</div>
+      <div class="drug-grid"><div><div class="drug-col-label first">First choice</div>${firstHtml}</div><div><div class="drug-col-label alt">Alternative / PCN-allergic</div>${altHtml}</div></div>
+      <div class="footer-row"><span class="duration-badge">${esc(r.duration)}</span></div></div>`;
+  }).join("");
+  el.innerHTML = `<div class="card"><div class="spine" style="background:${rm.fg}"></div>
+    <div class="body"><div class="card-top"><div class="card-title">${highlight(card.title)}</div><div class="route-tag" style="background:${rm.bg}; color:${rm.fg}">${rm.label}</div></div>
+    ${card.workup ? `<div class="workup">Workup: ${esc(card.workup)}</div>` : ""}${rows}</div></div>`;
+}
+
+/* ---------------- search wiring ---------------- */
+document.getElementById("search").addEventListener("input", (e)=>{
+  state.query = e.target.value.trim();
+  document.getElementById("searchBox").classList.toggle("has-value", !!state.query);
+  renderSystems();
+});
+document.getElementById("clearSearch").addEventListener("click", ()=>{
+  state.query = ""; const input = document.getElementById("search"); input.value = ""; input.focus();
+  document.getElementById("searchBox").classList.remove("has-value"); renderSystems();
+});
+
+/* ============================================================
+   DOSING TABLES
+============================================================ */
+function fillTable(id, rows){
+  document.getElementById(id).innerHTML = rows.map(r => `<tr>${r.map((c,i)=>`<td class="${i>0?'mono':''}">${esc(String(c))}</td>`).join("")}</tr>`).join("");
+}
+fillTable("doseAdultBody", DOSE_ADULT);
+fillTable("doseGentaBody", DOSE_GENTA);
+fillTable("dosePedsBody", DOSE_PEDS);
+fillTable("doseRedoseBody", DOSE_REDOSE);
+
+/* ============================================================
+   CALCULATORS
+============================================================ */
+function num(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+
+function calcCrCl(){
+  const sex = document.getElementById("cg-sex").value;
+  const age = num("cg-age"), weight = num("cg-weight"), scr = num("cg-scr");
+  const box = document.getElementById("cg-result");
+  if(age===null || weight===null || scr===null || scr<=0 || age<=0 || weight<=0){ box.style.display="none"; return; }
+  let crcl = ((140-age) * weight) / (72 * scr);
+  if(sex==="female") crcl *= 0.85;
+  crcl = Math.max(crcl, 0);
+  box.style.display = "block";
+  box.classList.toggle("warn", crcl < 30);
+  document.getElementById("cg-value").textContent = crcl.toFixed(1) + " mL/min";
+}
+["cg-sex","cg-age","cg-weight","cg-scr"].forEach(id => document.getElementById(id).addEventListener("input", calcCrCl));
+document.getElementById("cg-sex").addEventListener("change", calcCrCl);
+
+function calcVanco(){
+  const w = num("vanco-weight"); const box = document.getElementById("vanco-result");
+  if(w===null || w<=0){ box.style.display="none"; return; }
+  document.getElementById("vanco-value").textContent = w > 90 ? "1.5 g IV" : "1 g IV";
+  box.style.display = "block";
+}
+document.getElementById("vanco-weight").addEventListener("input", calcVanco);
+
+function calcCefa(){
+  const w = num("cefa-weight"); const box = document.getElementById("cefa-result");
+  if(w===null || w<=0){ box.style.display="none"; return; }
+  document.getElementById("cefa-value").textContent = w > 120 ? "3 g IV" : "2 g IV";
+  box.style.display = "block";
+}
+document.getElementById("cefa-weight").addEventListener("input", calcCefa);
+
+function calcGenta(){
+  const w = num("genta-weight"); const box = document.getElementById("genta-result");
+  const noteEl = document.getElementById("genta-note");
+  if(w===null || w<=0){ box.style.display="none"; return; }
+  let dose, note = "Within 60 min before incision, infuse over 30–120 min. Do not re-dose. Restricted — ID consult required past 48h.";
+  if(w < 45){ dose = "Below table range"; note = "Weight below 45 kg is outside the standard table — use clinical judgement / consult pharmacy."; }
+  else if(w <= 64){ dose = "160 mg IV"; }
+  else if(w <= 74){ dose = "240 mg IV"; }
+  else if(w <= 85){ dose = "320 mg IV"; }
+  else { dose = "Above table range"; note = "Weight above 85 kg is outside the standard table. If actual weight is >20% above IBW, use dosing weight = IBW + 0.4 × (actual − IBW), then consult pharmacy/ID."; }
+  box.style.display = "block";
+  box.classList.toggle("warn", dose.includes("range"));
+  document.getElementById("genta-value").textContent = dose;
+  noteEl.textContent = note;
+}
+document.getElementById("genta-weight").addEventListener("input", calcGenta);
+
+/* ============================================================
+   SPLASH
+============================================================ */
+const splash = document.getElementById("splash");
+function dismissSplash(){ splash.classList.add("hide"); }
+splash.addEventListener("click", dismissSplash);
+setTimeout(dismissSplash, 3000);
+
+/* ============================================================
+   PWA: install prompt + offline detection + service worker
+============================================================ */
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById("installBtn").classList.add("show");
+});
+document.getElementById("installBtn").addEventListener("click", async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("installBtn").classList.remove("show");
+});
+
+function updateOfflineBanner(){ document.getElementById("offlineBanner").classList.toggle("show", !navigator.onLine); }
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+updateOfflineBanner();
+
+if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")){
+  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+}
+
+/* back to top (rarely needed now screens are short, but kept for long lists) */
+const toTop = document.getElementById("toTop");
+window.addEventListener("scroll", ()=>{ toTop.classList.toggle("show", window.scrollY > 500); }, { passive:true });
+toTop.addEventListener("click", ()=> window.scrollTo({top:0, behavior:"smooth"}));
+
+render();
+</script>
+</body>
+</html>
