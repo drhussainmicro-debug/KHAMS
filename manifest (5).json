@@ -1,0 +1,16 @@
+{
+  "name": "AMS Guidelines Navigator — Kuwait Hospital",
+  "short_name": "AMS Guide",
+  "description": "Antimicrobial stewardship guidelines, dosing calculators, drug-interaction checker, and SSC 2026 sepsis pathway for Kuwait Hospital.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B2E4F",
+  "theme_color": "#0B2E4F",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
