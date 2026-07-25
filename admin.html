@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KHAMS Admin — Alerts &amp; Updates</title>
+<style>
+:root{--navy:#16294C;--teal:#0F766E;--bg:#F1F4F9;--line:#E3E8EF;--muted:#6B7280;--ink:#14181F}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.top h1{font-size:16px;margin:0;font-weight:700}
+.top button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:6px 11px;font-size:13px;cursor:pointer}
+.wrap{max-width:640px;margin:0 auto;padding:18px 16px 70px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 16px 18px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 4px}
+label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:92px;resize:vertical;line-height:1.4}
+.btn{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:14px}
+.btn.sec{background:#fff;color:var(--teal);border:1.5px solid var(--teal)}
+.btn.ghost{background:#fff;color:var(--muted);border:1px solid var(--line);font-weight:600}
+.msg{font-size:13px;margin-top:12px;padding:9px 11px;border-radius:8px;display:none;line-height:1.4}
+.msg.err{display:block;background:#FBEAE8;color:#B23A34}
+.msg.ok{display:block;background:#E2F5EC;color:#1E7D53}
+.hidden{display:none}
+.uitem{border:1px solid var(--line);border-radius:11px;padding:12px 12px 11px;margin-bottom:10px}
+.utag{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:20px;color:#fff}
+.utitle{font-weight:700;margin:7px 0 3px;line-height:1.25}
+.ubody{font-size:13px;color:#4A5563;line-height:1.42}
+.udate{font-size:11.5px;color:var(--muted);margin-top:4px}
+.uacts{margin-top:10px;display:flex;gap:8px}
+.uacts button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.uacts .del{color:#B23A34;border-color:#f0d5d0}
+.hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="top"><h1>KHAMS Admin</h1><button id="signout" class="hidden">Sign out</button></div>
+
+<div id="loginView" class="wrap">
+  <div class="card">
+    <h2>Sign in</h2>
+    <div class="hint">Use an editor account created in Firebase &rarr; Authentication &rarr; Users.</div>
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="username" placeholder="you@hospital.kw">
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="signin" class="btn">Sign in</button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<div id="editorView" class="wrap hidden">
+  <div class="card">
+    <h2>Add / edit an alert</h2>
+    <div class="hint">Saved changes appear live in the app&rsquo;s &ldquo;Alerts &amp; Updates&rdquo; for every user.</div>
+    <input id="editId" type="hidden">
+    <label>Category</label>
+    <select id="fCat">
+      <option value="shortage">Shortage</option>
+      <option value="stock">Back in stock</option>
+      <option value="guideline">Guideline</option>
+      <option value="test">New test</option>
+      <option value="newdrug">New antibiotic</option>
+    </select>
+    <label>Date</label>
+    <input id="fDate" type="date">
+    <label>Title</label>
+    <input id="fTitle" type="text" placeholder="Short headline">
+    <label>Details</label>
+    <textarea id="fBody" placeholder="One or two sentences of detail."></textarea>
+    <button id="save" class="btn">Save alert</button>
+    <button id="cancelEdit" class="btn ghost hidden">Cancel edit</button>
+    <div id="editMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Current alerts</h2>
+    <div id="list"><div class="hint">Loading&hellip;</div></div>
+    <button id="seed" class="btn sec">Seed current app content</button>
+    <div class="hint">Use once, on an empty database, to load the two alerts currently built into the app.</div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCsIXSuRAWG9qPtxdhJwdYw0b0K3ZxfCq4",
+  authDomain: "khams-4cfec.firebaseapp.com",
+  projectId: "khams-4cfec",
+  storageBucket: "khams-4cfec.firebasestorage.app",
+  messagingSenderId: "215396297414",
+  appId: "1:215396297414:web:9edcc6b0b809cad76e85c7"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const CATS = {
+  shortage: {label:"Shortage",       color:"#D97706"},
+  stock:    {label:"Back in stock",  color:"#1E9E63"},
+  guideline:{label:"Guideline",      color:"#2E5FA6"},
+  test:     {label:"New test",       color:"#7A5CC0"},
+  newdrug:  {label:"New antibiotic", color:"#B23A34"}
+};
+
+const DEFAULTS = [
+  {cat:"shortage",  date:"2026-07-21", title:"Ceftazidime\u2013avibactam: very limited supply", body:"Ceftazidime\u2013avibactam is now available but in very limited supply. Use is restricted \u2014 it may only be authorized by the Chairman of the Antimicrobial Stewardship Team, Dr. Hussain Alshamari."},
+  {cat:"guideline", date:"2026-07-21", title:"Clinical calculators updated with references", body:"The clinical calculators have been updated and now include their source references. Use them with caution \u2014 they are decision aids and are not a replacement for clinical judgment."}
+];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function msg(el, text, kind){ el.textContent=text; el.className='msg '+(kind||''); }
+
+/* ---------- auth ---------- */
+$('signin').addEventListener('click', async ()=>{
+  msg($('loginMsg'),'','');
+  try{ await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value); }
+  catch(e){ msg($('loginMsg'), friendly(e), 'err'); }
+});
+$('password').addEventListener('keydown', e=>{ if(e.key==='Enter') $('signin').click(); });
+$('signout').addEventListener('click', ()=> signOut(auth));
+
+function friendly(e){
+  const c=(e&&e.code)||'';
+  if(c.includes('invalid-cred')||c.includes('wrong-password')||c.includes('user-not-found')) return 'Wrong email or password.';
+  if(c.includes('invalid-email')) return 'That email address looks invalid.';
+  if(c.includes('too-many-requests')) return 'Too many attempts \u2014 wait a minute and try again.';
+  if(c.includes('network')) return 'Network error \u2014 check your connection.';
+  return (e&&e.message)||'Sign-in failed.';
+}
+
+onAuthStateChanged(auth, user=>{
+  if(user){
+    $('loginView').classList.add('hidden');
+    $('editorView').classList.remove('hidden');
+    $('signout').classList.remove('hidden');
+    subscribe();
+  }else{
+    $('editorView').classList.add('hidden');
+    $('loginView').classList.remove('hidden');
+    $('signout').classList.add('hidden');
+  }
+});
+
+/* ---------- live list ---------- */
+let unsub=null, current=[];
+function subscribe(){
+  if(unsub) return;
+  unsub = onSnapshot(collection(db,'updates'), snap=>{
+    const arr=[];
+    snap.forEach(d=>{ const u=d.data(); arr.push({id:d.id, cat:u.cat, date:u.date, title:u.title, body:u.body, order:u.order||0}); });
+    arr.sort((a,b)=> (b.date>a.date?1:b.date<a.date?-1:0) || (b.order-a.order));
+    current=arr; renderList(arr);
+  }, e=> msg($('editMsg'), (e&&e.message)||'Could not load alerts.', 'err'));
+}
+function renderList(arr){
+  const box=$('list');
+  if(!arr.length){ box.innerHTML='<div class="hint">No alerts yet. Add one above, or seed the current app content.</div>'; return; }
+  box.innerHTML = arr.map(u=>{
+    const c=CATS[u.cat]||{label:u.cat,color:'#888'};
+    return '<div class="uitem"><span class="utag" style="background:'+c.color+'">'+esc(c.label)+'</span>'+
+      '<div class="utitle">'+esc(u.title)+'</div>'+
+      '<div class="ubody">'+esc(u.body)+'</div>'+
+      '<div class="udate">'+esc(u.date)+'</div>'+
+      '<div class="uacts"><button data-edit="'+u.id+'">Edit</button>'+
+      '<button class="del" data-del="'+u.id+'">Delete</button></div></div>';
+  }).join('');
+  box.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> startEdit(current.find(x=>x.id===b.getAttribute('data-edit')))));
+  box.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=> remove(b.getAttribute('data-del'))));
+}
+
+/* ---------- form ---------- */
+function startEdit(u){
+  if(!u) return;
+  $('editId').value=u.id; $('fCat').value=u.cat; $('fDate').value=u.date;
+  $('fTitle').value=u.title; $('fBody').value=u.body;
+  $('save').textContent='Update alert'; $('cancelEdit').classList.remove('hidden');
+  msg($('editMsg'),'',''); window.scrollTo(0,0);
+}
+$('cancelEdit').addEventListener('click', resetForm);
+function resetForm(){
+  $('editId').value=''; $('fTitle').value=''; $('fBody').value=''; $('fDate').value=''; $('fCat').value='shortage';
+  $('save').textContent='Save alert'; $('cancelEdit').classList.add('hidden'); msg($('editMsg'),'','');
+}
+$('save').addEventListener('click', async ()=>{
+  const id=$('editId').value;
+  const data={ cat:$('fCat').value, date:$('fDate').value, title:$('fTitle').value.trim(), body:$('fBody').value.trim() };
+  if(!data.date || !data.title){ msg($('editMsg'),'Date and title are required.','err'); return; }
+  try{
+    if(id){ await updateDoc(doc(db,'updates',id), data); msg($('editMsg'),'Alert updated.','ok'); }
+    else  { data.order=Date.now(); await addDoc(collection(db,'updates'), data); msg($('editMsg'),'Alert posted.','ok'); }
+    resetForm();
+  }catch(e){ msg($('editMsg'), (e&&e.message)||'Save failed.', 'err'); }
+});
+async function remove(id){
+  if(!confirm('Delete this alert?')) return;
+  try{ await deleteDoc(doc(db,'updates',id)); }catch(e){ alert((e&&e.message)||'Delete failed.'); }
+}
+
+/* ---------- seed ---------- */
+$('seed').addEventListener('click', async ()=>{
+  try{
+    const snap=await getDocs(collection(db,'updates'));
+    if(!snap.empty && !confirm('The database already has alerts. Add the two built-in alerts anyway?')) return;
+    for(const d of DEFAULTS){ await addDoc(collection(db,'updates'), {...d, order:Date.now()}); }
+    msg($('editMsg'),'Seeded the current app content.','ok');
+  }catch(e){ msg($('editMsg'), (e&&e.message)||'Seed failed.', 'err'); }
+});
+</script>
+</body>
+</html>
