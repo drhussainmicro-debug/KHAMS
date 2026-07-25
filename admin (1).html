@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KHAMS Admin</title>
+<style>
+:root{--navy:#16294C;--teal:#0F766E;--bg:#F1F4F9;--line:#E3E8EF;--muted:#6B7280;--ink:#14181F}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.top h1{font-size:16px;margin:0;font-weight:700}
+.top button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:6px 11px;font-size:13px;cursor:pointer}
+.wrap{max-width:660px;margin:0 auto;padding:16px 16px 70px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tabs button{flex:1;min-width:70px;padding:9px 6px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.tabs button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 16px 18px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 4px}
+label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:92px;resize:vertical;line-height:1.4}
+.btn{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:14px}
+.btn.sec{background:#fff;color:var(--teal);border:1.5px solid var(--teal)}
+.btn.ghost{background:#fff;color:var(--muted);border:1px solid var(--line);font-weight:600}
+.msg{font-size:13px;margin-top:12px;padding:9px 11px;border-radius:8px;display:none;line-height:1.4}
+.msg.err{display:block;background:#FBEAE8;color:#B23A34}
+.msg.ok{display:block;background:#E2F5EC;color:#1E7D53}
+.hidden{display:none}
+.uitem{border:1px solid var(--line);border-radius:11px;padding:12px 12px 11px;margin-bottom:10px}
+.utag{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:20px;color:#fff}
+.utitle{font-weight:700;margin:7px 0 3px;line-height:1.25}
+.ubody{font-size:13px;color:#4A5563;line-height:1.42}
+.udate{font-size:11.5px;color:var(--muted);margin-top:4px}
+.uacts{margin-top:10px;display:flex;gap:8px}
+.uacts button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.uacts .del{color:#B23A34;border-color:#f0d5d0}
+.hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+.trow{border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:9px}
+.trow .tkey{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.03em}
+.trow input{margin-top:6px}
+.grp{border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:10px}
+.grp .ghd{display:flex;gap:8px;align-items:center}
+.grp .ghd input{flex:1}
+.grp .rm{flex:none;width:38px;padding:9px 0;border:1px solid #f0d5d0;background:#fff;color:#B23A34;border-radius:8px;font-size:16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="top"><h1>KHAMS Admin</h1><button id="signout" class="hidden">Sign out</button></div>
+
+<div id="loginView" class="wrap">
+  <div class="card">
+    <h2>Sign in</h2>
+    <div class="hint">Use an editor account created in Firebase &rarr; Authentication &rarr; Users.</div>
+    <label>Email</label><input id="email" type="email" autocomplete="username" placeholder="you@hospital.kw">
+    <label>Password</label><input id="password" type="password" autocomplete="current-password">
+    <button id="signin" class="btn">Sign in</button>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<div id="editorView" class="wrap hidden">
+  <div class="tabs">
+    <button data-tab="alerts" class="active">Alerts</button>
+    <button data-tab="contacts">Contacts</button>
+    <button data-tab="tiles">Tiles</button>
+    <button data-tab="restricted">Restricted</button>
+    <button data-tab="guidelines">Guidelines</button>
+    <button data-tab="monographs">Drugs</button>
+    <button data-tab="interactions">Interactions</button>
+    <button data-tab="screening">Screening</button>
+  </div>
+
+  <div id="tab-alerts">
+    <div class="card">
+      <h2>Add / edit an alert</h2>
+      <div class="hint">Appears live in the app&rsquo;s &ldquo;Alerts &amp; Updates&rdquo; for every user.</div>
+      <input id="editId" type="hidden">
+      <label>Category</label>
+      <select id="fCat">
+        <option value="shortage">Shortage</option><option value="stock">Back in stock</option>
+        <option value="guideline">Guideline</option><option value="test">New test</option>
+        <option value="newdrug">New antibiotic</option>
+      </select>
+      <label>Date</label><input id="fDate" type="date">
+      <label>Title</label><input id="fTitle" type="text" placeholder="Short headline">
+      <label>Details</label><textarea id="fBody" placeholder="One or two sentences of detail."></textarea>
+      <button id="save" class="btn">Save alert</button>
+      <button id="cancelEdit" class="btn ghost hidden">Cancel edit</button>
+      <div id="editMsg" class="msg"></div>
+    </div>
+    <div class="card">
+      <h2>Current alerts</h2>
+      <div id="list"><div class="hint">Loading&hellip;</div></div>
+      <button id="seed" class="btn sec">Seed current app content</button>
+      <div class="hint">Use once, on an empty database, to load the two alerts built into the app.</div>
+    </div>
+  </div>
+
+  <div id="tab-contacts" class="hidden">
+    <div class="card">
+      <h2>AMS team contacts</h2>
+      <div class="hint">Shown on the app&rsquo;s Consult screen. Changes apply next time a user opens it.</div>
+      <label>Video meeting link</label><input id="cMeet" type="url" placeholder="https://meet.google.com/...">
+      <label>Phone (on-call)</label><input id="cPhone" type="text" placeholder="+965 ...">
+      <label>WhatsApp (digits only, optional)</label><input id="cWa" type="text" placeholder="96500000000">
+      <label>Email</label><input id="cEmail" type="email" placeholder="ams@hospital.kw">
+      <label>Hours line</label><input id="cHours" type="text">
+      <button id="cSave" class="btn">Save contacts</button>
+      <div id="cMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <div id="tab-tiles" class="hidden">
+    <div class="card">
+      <h2>Home tile labels</h2>
+      <div class="hint">Rename tiles or reword their subtitles. Changes show on the next visit to Home / app reload.</div>
+      <div id="tileRows"></div>
+      <button id="tSave" class="btn">Save tiles</button>
+      <div id="tMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <div id="tab-restricted" class="hidden">
+    <div class="card">
+      <h2>Restricted antimicrobials</h2>
+      <div class="hint">Groups and the drugs under each. One drug per line. Applies on next open of the restricted list.</div>
+      <div id="grpRows"></div>
+      <button id="rAdd" class="btn ghost">+ Add group</button>
+      <button id="rSave" class="btn">Save restricted list</button>
+      <div id="rMsg" class="msg"></div>
+    </div>
+  </div>
+
+  <div id="tab-guidelines" class="hidden">
+    <div class="card" id="gSeedCard">
+      <h2>Guidelines</h2>
+      <div class="hint">The full adult, paediatric and surgical guidelines. To edit them, load the current content into the database once. (Requires guidelines_seed.json uploaded to the repo.)</div>
+      <button id="gSeed" class="btn">Load current guidelines into database</button>
+      <div id="gSeedMsg" class="msg"></div>
+    </div>
+    <div class="card hidden" id="gEditCard">
+      <h2>Edit a guideline entry</h2>
+      <div class="hint">Pick the section, system, condition and entry, edit the fields, and save. Changes go live in the app.</div>
+      <label>Section</label>
+      <select id="gSec"><option value="adult">Adult</option><option value="pediatric">Paediatric</option><option value="surgical">Surgical prophylaxis</option></select>
+      <label>System</label><select id="gSys"></select>
+      <label>Condition</label><select id="gGrp"></select>
+      <label>Entry</label><select id="gItem"></select>
+      <div id="gFields"></div>
+      <button id="gSave" class="btn">Save entry</button>
+      <div id="gMsg" class="msg"></div>
+      <button id="gReseed" class="btn ghost">Re-load original guidelines (overwrite edits)</button>
+    </div>
+  </div>
+
+  <div id="tab-monographs" class="hidden">
+    <div class="card" id="mSeedCard">
+      <h2>Drug information (monographs)</h2>
+      <div class="hint">Class, uses, dosing, PK/PD, monitoring for each drug. Load the current content once to edit. (Requires content_seed.json in the repo.)</div>
+      <button id="mSeed" class="btn">Load current drug info into database</button>
+      <div id="mSeedMsg" class="msg"></div>
+    </div>
+    <div class="card hidden" id="mEditCard">
+      <h2>Edit a drug</h2>
+      <label>Category</label><select id="mCat"></select>
+      <label>Drug</label><select id="mDrug"></select>
+      <div id="mFields"></div>
+      <button id="mSave" class="btn">Save drug</button>
+      <div id="mMsg" class="msg"></div>
+      <button id="mReseed" class="btn ghost">Re-load original drug info (overwrite edits)</button>
+    </div>
+  </div>
+
+  <div id="tab-interactions" class="hidden">
+    <div class="card" id="iSeedCard">
+      <h2>Drug interactions</h2>
+      <div class="hint">Load the current interaction pairs once to edit. (Requires content_seed.json in the repo.)</div>
+      <button id="iSeed" class="btn">Load current interactions into database</button>
+      <div id="iSeedMsg" class="msg"></div>
+    </div>
+    <div class="card hidden" id="iEditCard">
+      <h2>Add / edit an interaction</h2>
+      <input id="iId" type="hidden">
+      <label>Drug A (key)</label><input id="iA" placeholder="vancomycin">
+      <label>Drug B (key)</label><input id="iB" placeholder="gentamicin">
+      <label>Severity</label><select id="iSev"><option value="major">Major</option><option value="moderate">Moderate</option><option value="minor">Minor</option></select>
+      <label>Mechanism</label><textarea id="iMech"></textarea>
+      <label>Management</label><textarea id="iMgmt"></textarea>
+      <button id="iSave" class="btn">Save interaction</button>
+      <button id="iCancel" class="btn ghost hidden">Cancel edit</button>
+      <div id="iMsg" class="msg"></div>
+    </div>
+    <div class="card hidden" id="iListCard">
+      <h2>Current interactions</h2>
+      <input id="iFilter" placeholder="Filter by drug name\u2026" style="margin-bottom:10px">
+      <div id="iList"></div>
+    </div>
+  </div>
+
+  <div id="tab-screening" class="hidden">
+    <div class="card">
+      <h2>Screening &amp; BSI criteria</h2>
+      <div class="hint">One item per line. Applies on next open of the relevant screen.</div>
+      <label>Staph. aureus bacteraemia \u2014 complicated criteria</label><textarea id="sCrit" style="min-height:130px"></textarea>
+      <label>MRSA / MDR-GN \u2014 mandatory screening</label><textarea id="sMcrit" style="min-height:110px"></textarea>
+      <label>MRSA / MDR-GN \u2014 risk factors</label><textarea id="sMrisk" style="min-height:150px"></textarea>
+      <button id="sSave" class="btn">Save screening criteria</button>
+      <div id="sMsg" class="msg"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCsIXSuRAWG9qPtxdhJwdYw0b0K3ZxfCq4",
+  authDomain: "khams-4cfec.firebaseapp.com",
+  projectId: "khams-4cfec",
+  storageBucket: "khams-4cfec.firebasestorage.app",
+  messagingSenderId: "215396297414",
+  appId: "1:215396297414:web:9edcc6b0b809cad76e85c7"
+};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const msg=(el,t,k)=>{el.textContent=t;el.className='msg '+(k||'');};
+
+const CATS={shortage:{label:"Shortage",color:"#D97706"},stock:{label:"Back in stock",color:"#1E9E63"},guideline:{label:"Guideline",color:"#2E5FA6"},test:{label:"New test",color:"#7A5CC0"},newdrug:{label:"New antibiotic",color:"#B23A34"}};
+
+const DEFAULTS=[
+  {cat:"shortage",  date:"2026-07-21", title:"Ceftazidime\u2013avibactam: very limited supply", body:"Ceftazidime\u2013avibactam is now available but in very limited supply. Use is restricted \u2014 it may only be authorized by the Chairman of the Antimicrobial Stewardship Team, Dr. Hussain Alshamari."},
+  {cat:"guideline", date:"2026-07-21", title:"Clinical calculators updated with references", body:"The clinical calculators have been updated and now include their source references. Use them with caution \u2014 they are decision aids and are not a replacement for clinical judgment."}
+];
+const DEF_CONTACTS={meetUrl:"https://meet.google.com/xxx-xxxx-xxx",phone:"+965 0000 0000",whatsapp:"",email:"ams@kuwaitcdc.gov.kw",hours:"Sun\u2013Thu, 8:00\u201320:00 \u00b7 on-call for urgent cases"};
+const DEF_TILES=[
+  {name:"Guidelines",sub:"By system & specialty"},
+  {name:"Sepsis Pathway",sub:"SSC 2026 bundle"},
+  {name:"Staph. aureus Bacteraemia Pathway",sub:"SA-BSI management"},
+  {name:"MRSA & MDR-GN Screening",sub:"Risk checklist"},
+  {name:"Antimicrobial Prescribing Principles",sub:"Core prescribing rules"},
+  {name:"Calculators",sub:"Dosing & risk scores"},
+  {name:"Favorites & Recent",sub:"Saved & recent"},
+  {name:"Drug Interaction Checker",sub:"Major interactions"},
+  {name:"Antimicrobial Information",sub:"Drug monographs"},
+  {name:"Antibiotic Allergy",sub:"Assess & delabel"},
+  {name:"Alerts & Updates",sub:"Shortages & changes"},
+  {name:"IV \u2192 Oral Switch",sub:"Criteria & oral agents"}
+];
+const DEF_RESTRICTED=[
+  {g:"Carbapenems",items:["Ertapenem","Imipenem","Meropenem"]},
+  {g:"\u03b2-lactam / \u03b2-lactamase inhibitor",items:["Ceftazidime\u2013Avibactam","Ceftolozane\u2013Tazobactam"]},
+  {g:"Other antibacterials",items:["Polymyxin E (Colistin)","Linezolid","Tigecycline"]},
+  {g:"Antifungals",items:["Anidulafungin","Caspofungin","Liposomal Amphotericin B"]}
+];
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  ['alerts','contacts','tiles','restricted','guidelines','monographs','interactions','screening'].forEach(t=>$('tab-'+t).classList.toggle('hidden', t!==b.dataset.tab));
+}));
+
+/* ---------- auth ---------- */
+$('signin').addEventListener('click', async ()=>{ msg($('loginMsg'),'',''); try{ await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value);}catch(e){ msg($('loginMsg'),friendly(e),'err'); }});
+$('password').addEventListener('keydown',e=>{ if(e.key==='Enter') $('signin').click(); });
+$('signout').addEventListener('click',()=>signOut(auth));
+function friendly(e){const c=(e&&e.code)||'';if(c.includes('invalid-cred')||c.includes('wrong-password')||c.includes('user-not-found'))return'Wrong email or password.';if(c.includes('invalid-email'))return'That email address looks invalid.';if(c.includes('too-many-requests'))return'Too many attempts \u2014 wait a minute and retry.';if(c.includes('network'))return'Network error \u2014 check your connection.';return(e&&e.message)||'Sign-in failed.';}
+
+onAuthStateChanged(auth, user=>{
+  if(user){ $('loginView').classList.add('hidden'); $('editorView').classList.remove('hidden'); $('signout').classList.remove('hidden'); subscribeAlerts(); loadContacts(); loadTiles(); loadRestricted(); loadGuidelines(); loadMonographs(); loadInteractions(); loadScreening(); }
+  else{ $('editorView').classList.add('hidden'); $('loginView').classList.remove('hidden'); $('signout').classList.add('hidden'); }
+});
+
+/* ---------- ALERTS ---------- */
+let unsub=null, current=[];
+function subscribeAlerts(){ if(unsub)return; unsub=onSnapshot(collection(db,'updates'),snap=>{ const arr=[]; snap.forEach(d=>{const u=d.data();arr.push({id:d.id,cat:u.cat,date:u.date,title:u.title,body:u.body,order:u.order||0});}); arr.sort((a,b)=>(b.date>a.date?1:b.date<a.date?-1:0)||(b.order-a.order)); current=arr; renderList(arr); }, e=>msg($('editMsg'),(e&&e.message)||'Could not load alerts.','err')); }
+function renderList(arr){ const box=$('list'); if(!arr.length){box.innerHTML='<div class="hint">No alerts yet. Add one above, or seed the current app content.</div>';return;} box.innerHTML=arr.map(u=>{const c=CATS[u.cat]||{label:u.cat,color:'#888'};return '<div class="uitem"><span class="utag" style="background:'+c.color+'">'+esc(c.label)+'</span><div class="utitle">'+esc(u.title)+'</div><div class="ubody">'+esc(u.body)+'</div><div class="udate">'+esc(u.date)+'</div><div class="uacts"><button data-edit="'+u.id+'">Edit</button><button class="del" data-del="'+u.id+'">Delete</button></div></div>';}).join(''); box.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(current.find(x=>x.id===b.getAttribute('data-edit'))))); box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>removeAlert(b.getAttribute('data-del')))); }
+function startEdit(u){ if(!u)return; $('editId').value=u.id;$('fCat').value=u.cat;$('fDate').value=u.date;$('fTitle').value=u.title;$('fBody').value=u.body; $('save').textContent='Update alert';$('cancelEdit').classList.remove('hidden'); msg($('editMsg'),'',''); window.scrollTo(0,0); }
+$('cancelEdit').addEventListener('click',resetForm);
+function resetForm(){ $('editId').value='';$('fTitle').value='';$('fBody').value='';$('fDate').value='';$('fCat').value='shortage'; $('save').textContent='Save alert';$('cancelEdit').classList.add('hidden');msg($('editMsg'),'',''); }
+$('save').addEventListener('click', async ()=>{ const id=$('editId').value; const data={cat:$('fCat').value,date:$('fDate').value,title:$('fTitle').value.trim(),body:$('fBody').value.trim()}; if(!data.date||!data.title){msg($('editMsg'),'Date and title are required.','err');return;} try{ if(id){await updateDoc(doc(db,'updates',id),data);msg($('editMsg'),'Alert updated.','ok');} else{data.order=Date.now();await addDoc(collection(db,'updates'),data);msg($('editMsg'),'Alert posted.','ok');} resetForm(); }catch(e){msg($('editMsg'),(e&&e.message)||'Save failed.','err');} });
+async function removeAlert(id){ if(!confirm('Delete this alert?'))return; try{await deleteDoc(doc(db,'updates',id));}catch(e){alert((e&&e.message)||'Delete failed.');} }
+$('seed').addEventListener('click', async ()=>{ try{ const snap=await getDocs(collection(db,'updates')); if(!snap.empty && !confirm('The database already has alerts. Add the two built-in alerts anyway?'))return; for(const d of DEFAULTS){await addDoc(collection(db,'updates'),{...d,order:Date.now()});} msg($('editMsg'),'Seeded the current app content.','ok'); }catch(e){msg($('editMsg'),(e&&e.message)||'Seed failed.','err');} });
+
+/* ---------- CONTACTS ---------- */
+async function loadContacts(){ let d=DEF_CONTACTS; try{ const s=await getDoc(doc(db,'config','contacts')); if(s.exists()) d={...DEF_CONTACTS,...s.data()}; }catch(e){} $('cMeet').value=d.meetUrl||'';$('cPhone').value=d.phone||'';$('cWa').value=d.whatsapp||'';$('cEmail').value=d.email||'';$('cHours').value=d.hours||''; }
+$('cSave').addEventListener('click', async ()=>{ const data={meetUrl:$('cMeet').value.trim(),phone:$('cPhone').value.trim(),whatsapp:$('cWa').value.trim(),email:$('cEmail').value.trim(),hours:$('cHours').value.trim()}; try{ await setDoc(doc(db,'config','contacts'),data); msg($('cMsg'),'Contacts saved.','ok'); }catch(e){ msg($('cMsg'),(e&&e.message)||'Save failed.','err'); } });
+
+/* ---------- TILES ---------- */
+async function loadTiles(){ let over={}; try{ const s=await getDoc(doc(db,'config','tiles')); if(s.exists()){ ((s.data()||{}).items||[]).forEach(it=>{ if(it&&it.idx!=null) over[it.idx]=it; }); } }catch(e){} $('tileRows').innerHTML=DEF_TILES.map((t,i)=>{ const nm=(over[i]&&over[i].name)||t.name; const sb=(over[i]&&typeof over[i].subtitle==='string')?over[i].subtitle:t.sub; return '<div class="trow"><div class="tkey">Tile '+(i+1)+'</div><input data-tn="'+i+'" value="'+esc(nm)+'" placeholder="Name"><input data-ts="'+i+'" value="'+esc(sb)+'" placeholder="Subtitle"></div>'; }).join(''); }
+$('tSave').addEventListener('click', async ()=>{ const items=DEF_TILES.map((t,i)=>({idx:i,name:$('tileRows').querySelector('[data-tn="'+i+'"]').value.trim()||t.name,subtitle:$('tileRows').querySelector('[data-ts="'+i+'"]').value.trim()})); try{ await setDoc(doc(db,'config','tiles'),{items}); msg($('tMsg'),'Tiles saved. Reload the app / revisit Home to see changes.','ok'); }catch(e){ msg($('tMsg'),(e&&e.message)||'Save failed.','err'); } });
+
+/* ---------- RESTRICTED ---------- */
+let grpState=[];
+async function loadRestricted(){ let g=DEF_RESTRICTED; try{ const s=await getDoc(doc(db,'config','restricted')); if(s.exists() && Array.isArray((s.data()||{}).groups) && s.data().groups.length) g=s.data().groups; }catch(e){} grpState=g.map(x=>({g:x.g||'',items:(x.items||[]).slice()})); renderGroups(); }
+function renderGroups(){ $('grpRows').innerHTML=grpState.map((x,i)=>'<div class="grp"><div class="ghd"><input data-gn="'+i+'" value="'+esc(x.g)+'" placeholder="Group name"><button class="rm" data-grm="'+i+'">\u00d7</button></div><textarea data-gi="'+i+'" placeholder="One drug per line">'+esc((x.items||[]).join('\n'))+'</textarea></div>').join(''); $('grpRows').querySelectorAll('[data-grm]').forEach(b=>b.addEventListener('click',()=>{ syncGroups(); grpState.splice(+b.dataset.grm,1); renderGroups(); })); }
+function syncGroups(){ grpState=grpState.map((x,i)=>{ const gn=$('grpRows').querySelector('[data-gn="'+i+'"]'); const gi=$('grpRows').querySelector('[data-gi="'+i+'"]'); return {g:gn?gn.value:x.g, items:gi?gi.value.split('\n').map(s=>s.trim()).filter(Boolean):x.items}; }); }
+$('rAdd').addEventListener('click',()=>{ syncGroups(); grpState.push({g:'',items:[]}); renderGroups(); });
+$('rSave').addEventListener('click', async ()=>{ syncGroups(); const groups=grpState.filter(x=>x.g && x.g.trim()).map(x=>({g:x.g.trim(),items:x.items})); if(!groups.length){msg($('rMsg'),'Add at least one group.','err');return;} try{ await setDoc(doc(db,'config','restricted'),{groups}); msg($('rMsg'),'Restricted list saved.','ok'); }catch(e){ msg($('rMsg'),(e&&e.message)||'Save failed.','err'); } });
+/* ---------- GUIDELINES ---------- */
+let gData=null;
+async function loadGuidelines(){
+  try{
+    const out={}; let ok=true;
+    for(const s of ['adult','pediatric','surgical']){ const d=await getDoc(doc(db,'guidelines',s)); if(d.exists() && Array.isArray((d.data()||{}).data)) out[s]=d.data().data; else ok=false; }
+    if(ok){ gData=out; $('gSeedCard').classList.add('hidden'); $('gEditCard').classList.remove('hidden'); fillSystems(); }
+    else { gData=null; $('gSeedCard').classList.remove('hidden'); $('gEditCard').classList.add('hidden'); }
+  }catch(e){ msg($('gSeedMsg'),(e&&e.message)||'Could not load guidelines.','err'); }
+}
+async function seedGuidelines(){
+  msg($('gSeedMsg'),'Loading current guidelines\u2026','');
+  try{
+    const res=await fetch('guidelines_seed.json',{cache:'no-store'});
+    if(!res.ok) throw new Error('guidelines_seed.json not found next to admin.html in the repo.');
+    const j=await res.json();
+    for(const s of ['adult','pediatric','surgical']){ await setDoc(doc(db,'guidelines',s),{data:j[s]||[]}); }
+    msg($('gSeedMsg'),'Guidelines loaded. Opening editor\u2026','ok');
+    await loadGuidelines();
+  }catch(e){ msg($('gSeedMsg'),(e&&e.message)||'Load failed.','err'); }
+}
+$('gSeed').addEventListener('click', seedGuidelines);
+$('gReseed').addEventListener('click', ()=>{ if(confirm('Re-load the original built-in guidelines? This overwrites any edits.')) seedGuidelines(); });
+
+function secArr(){ return (gData&&gData[$('gSec').value])||[]; }
+function fillSystems(){ const a=secArr(); $('gSys').innerHTML=a.map((s,i)=>'<option value="'+i+'">'+esc(s.system||('System '+(i+1)))+'</option>').join(''); fillGroups(); }
+function fillGroups(){ const s=secArr()[+$('gSys').value]; const g=(s&&s.groups)||[]; $('gGrp').innerHTML=g.map((x,i)=>'<option value="'+i+'">'+esc(x.title||('Condition '+(i+1)))+'</option>').join(''); fillItems(); }
+function fillItems(){ const s=secArr()[+$('gSys').value]; const g=((s&&s.groups)||[])[+$('gGrp').value]; const it=(g&&g.items)||[]; $('gItem').innerHTML=it.map((x,i)=>'<option value="'+i+'">'+esc(x.name||('Entry '+(i+1)))+'</option>').join(''); showFields(); }
+function curItem(){ const s=secArr()[+$('gSys').value]; const g=((s&&s.groups)||[])[+$('gGrp').value]; return ((g&&g.items)||[])[+$('gItem').value]; }
+function showFields(){ const it=curItem(); if(!it){ $('gFields').innerHTML=''; return; }
+  const f = it.kind==='surgical'
+    ? [['name','Procedure',0],['comments','Comments',1],['firstLine','First-line',1],['alternatives','Alternatives',1]]
+    : [['name','Situation',0],['workup','Workup / notes',1],['aetiology','Likely pathogens',1],['first','First-line',1],['second','Alternative',1],['duration','Duration',0]];
+  $('gFields').innerHTML=f.map(row=>{ const k=row[0],lab=row[1],big=row[2]; const v=esc(it[k]||''); return '<label>'+lab+'</label>'+(big?'<textarea data-gf="'+k+'">'+v+'</textarea>':'<input data-gf="'+k+'" value="'+v+'">'); }).join('');
+}
+['gSec','gSys','gGrp','gItem'].forEach(id=>$(id).addEventListener('change',()=>{ if(id==='gSec')fillSystems(); else if(id==='gSys')fillGroups(); else if(id==='gGrp')fillItems(); else showFields(); }));
+$('gSave').addEventListener('click', async ()=>{
+  const it=curItem(); if(!it){ msg($('gMsg'),'Nothing selected.','err'); return; }
+  $('gFields').querySelectorAll('[data-gf]').forEach(el=>{ it[el.getAttribute('data-gf')]=el.value; });
+  try{ await setDoc(doc(db,'guidelines',$('gSec').value),{data:secArr()}); msg($('gMsg'),'Entry saved \u2014 live in the app.','ok'); fillItems(); }
+  catch(e){ msg($('gMsg'),(e&&e.message)||'Save failed.','err'); }
+});
+/* ---------- shared content seed ---------- */
+let CONTENT_SEED=null;
+async function contentSeed(){ if(CONTENT_SEED) return CONTENT_SEED; const r=await fetch('content_seed.json',{cache:'no-store'}); if(!r.ok) throw new Error('content_seed.json not found next to admin.html in the repo.'); CONTENT_SEED=await r.json(); return CONTENT_SEED; }
+
+/* ---------- MONOGRAPHS ---------- */
+const MONO_FIELDS=[['name','Name',0],['cls','Class',0],['aware','AWaRe (Access/Watch/Reserve)',0],['uses','Uses',1],['action','Action',1],['pkpd','PK/PD index',1],['adultDose','Adult dose',1],['pedDose','Paediatric dose',1],['sideEffects','Side effects',1],['monitoring','Monitoring',1],['renalAdj','Renal adjustment',0],['hepaticAdj','Hepatic adjustment',0],['tdm','TDM',0],['notes','Notes',1]];
+let mData=null;
+async function loadMonographs(){ try{ const d=await getDoc(doc(db,'monographs','data')); if(d.exists()&&Array.isArray((d.data()||{}).data)){ mData=d.data().data; $('mSeedCard').classList.add('hidden'); $('mEditCard').classList.remove('hidden'); mFillCats(); } else { mData=null; $('mSeedCard').classList.remove('hidden'); $('mEditCard').classList.add('hidden'); } }catch(e){ msg($('mSeedMsg'),(e&&e.message)||'Could not load.','err'); } }
+async function seedMonographs(){ msg($('mSeedMsg'),'Loading\u2026',''); try{ const j=await contentSeed(); await setDoc(doc(db,'monographs','data'),{data:j.monographs||[]}); msg($('mSeedMsg'),'Loaded.','ok'); await loadMonographs(); }catch(e){ msg($('mSeedMsg'),(e&&e.message)||'Load failed.','err'); } }
+$('mSeed').addEventListener('click',seedMonographs);
+$('mReseed').addEventListener('click',()=>{ if(confirm('Re-load original drug info? Overwrites edits.')) seedMonographs(); });
+function mFillCats(){ $('mCat').innerHTML=(mData||[]).map((c,i)=>'<option value="'+i+'">'+esc(c.category||('Category '+(i+1)))+'</option>').join(''); mFillDrugs(); }
+function mFillDrugs(){ const c=(mData||[])[+$('mCat').value]; const dr=(c&&c.drugs)||[]; $('mDrug').innerHTML=dr.map((d,i)=>'<option value="'+i+'">'+esc(d.name||('Drug '+(i+1)))+'</option>').join(''); mShow(); }
+function mCur(){ const c=(mData||[])[+$('mCat').value]; return ((c&&c.drugs)||[])[+$('mDrug').value]; }
+function mShow(){ const d=mCur(); if(!d){ $('mFields').innerHTML=''; return; } $('mFields').innerHTML=MONO_FIELDS.map(f=>{ const v=esc(d[f[0]]||''); return '<label>'+f[1]+'</label>'+(f[2]?'<textarea data-mf="'+f[0]+'">'+v+'</textarea>':'<input data-mf="'+f[0]+'" value="'+v+'">'); }).join(''); }
+$('mCat').addEventListener('change',mFillDrugs); $('mDrug').addEventListener('change',mShow);
+$('mSave').addEventListener('click', async ()=>{ const d=mCur(); if(!d){ msg($('mMsg'),'Nothing selected.','err'); return; } $('mFields').querySelectorAll('[data-mf]').forEach(el=>{ d[el.getAttribute('data-mf')]=el.value; }); try{ await setDoc(doc(db,'monographs','data'),{data:mData}); msg($('mMsg'),'Drug saved \u2014 live in the app.','ok'); mFillDrugs(); }catch(e){ msg($('mMsg'),(e&&e.message)||'Save failed.','err'); } });
+
+/* ---------- INTERACTIONS ---------- */
+let iData=null;
+async function loadInteractions(){ try{ const d=await getDoc(doc(db,'interactions','data')); if(d.exists()&&Array.isArray((d.data()||{}).data)){ iData=d.data().data; $('iSeedCard').classList.add('hidden'); $('iEditCard').classList.remove('hidden'); $('iListCard').classList.remove('hidden'); iRender(); } else { iData=null; $('iSeedCard').classList.remove('hidden'); $('iEditCard').classList.add('hidden'); $('iListCard').classList.add('hidden'); } }catch(e){ msg($('iSeedMsg'),(e&&e.message)||'Could not load.','err'); } }
+async function seedInteractions(){ msg($('iSeedMsg'),'Loading\u2026',''); try{ const j=await contentSeed(); await setDoc(doc(db,'interactions','data'),{data:j.interactions||[]}); msg($('iSeedMsg'),'Loaded.','ok'); await loadInteractions(); }catch(e){ msg($('iSeedMsg'),(e&&e.message)||'Load failed.','err'); } }
+$('iSeed').addEventListener('click',seedInteractions);
+$('iFilter').addEventListener('input',iRender);
+function iRender(){ if(!iData)return; const q=$('iFilter').value.trim().toLowerCase(); const rows=iData.map((p,idx)=>({p,idx})).filter(o=>!q||(o.p.a||'').toLowerCase().includes(q)||(o.p.b||'').toLowerCase().includes(q)); $('iList').innerHTML=rows.map(o=>{ const c={major:'#B23A34',moderate:'#D97706',minor:'#1E9E63'}[o.p.severity]||'#888'; return '<div class="uitem"><span class="utag" style="background:'+c+'">'+esc(o.p.severity||'')+'</span><div class="utitle">'+esc(o.p.a)+' + '+esc(o.p.b)+'</div><div class="ubody">'+esc(o.p.mechanism||'')+'</div><div class="uacts"><button data-ie="'+o.idx+'">Edit</button><button class="del" data-idd="'+o.idx+'">Delete</button></div></div>'; }).join('')||'<div class="hint">No matches.</div>'; $('iList').querySelectorAll('[data-ie]').forEach(b=>b.addEventListener('click',()=>iEdit(+b.dataset.ie))); $('iList').querySelectorAll('[data-idd]').forEach(b=>b.addEventListener('click',()=>iDel(+b.dataset.idd))); }
+function iEdit(idx){ const p=iData[idx]; if(!p)return; $('iId').value=idx; $('iA').value=p.a||''; $('iB').value=p.b||''; $('iSev').value=p.severity||'moderate'; $('iMech').value=p.mechanism||''; $('iMgmt').value=p.management||''; $('iSave').textContent='Update interaction'; $('iCancel').classList.remove('hidden'); window.scrollTo(0,0); }
+$('iCancel').addEventListener('click',iReset);
+function iReset(){ $('iId').value=''; $('iA').value='';$('iB').value='';$('iMech').value='';$('iMgmt').value='';$('iSev').value='major'; $('iSave').textContent='Save interaction'; $('iCancel').classList.add('hidden'); msg($('iMsg'),'',''); }
+$('iSave').addEventListener('click', async ()=>{ const rec={a:$('iA').value.trim(),b:$('iB').value.trim(),severity:$('iSev').value,mechanism:$('iMech').value.trim(),management:$('iMgmt').value.trim()}; if(!rec.a||!rec.b){ msg($('iMsg'),'Both drug keys are required.','err'); return; } const id=$('iId').value; if(id!=='') iData[+id]=rec; else iData.push(rec); try{ await setDoc(doc(db,'interactions','data'),{data:iData}); msg($('iMsg'),'Saved \u2014 live in the app.','ok'); iReset(); iRender(); }catch(e){ msg($('iMsg'),(e&&e.message)||'Save failed.','err'); } });
+async function iDel(idx){ if(!confirm('Delete this interaction?'))return; iData.splice(idx,1); try{ await setDoc(doc(db,'interactions','data'),{data:iData}); iRender(); }catch(e){ alert((e&&e.message)||'Delete failed.'); } }
+
+/* ---------- SCREENING ---------- */
+async function loadScreening(){ let base={criteria:[],mdroCrit:[],mdroRisk:[]}; try{ const j=await contentSeed(); base={criteria:j.criteria||[],mdroCrit:j.mdroCrit||[],mdroRisk:j.mdroRisk||[]}; }catch(e){} try{ const d=await getDoc(doc(db,'config','screening')); if(d.exists()){ const o=d.data()||{}; ['criteria','mdroCrit','mdroRisk'].forEach(k=>{ if(Array.isArray(o[k])) base[k]=o[k]; }); } }catch(e){} $('sCrit').value=(base.criteria||[]).join('\n'); $('sMcrit').value=(base.mdroCrit||[]).join('\n'); $('sMrisk').value=(base.mdroRisk||[]).join('\n'); }
+$('sSave').addEventListener('click', async ()=>{ const toArr=t=>t.split('\n').map(s=>s.trim()).filter(Boolean); const data={criteria:toArr($('sCrit').value),mdroCrit:toArr($('sMcrit').value),mdroRisk:toArr($('sMrisk').value)}; try{ await setDoc(doc(db,'config','screening'),data); msg($('sMsg'),'Screening criteria saved.','ok'); }catch(e){ msg($('sMsg'),(e&&e.message)||'Save failed.','err'); } });
+</script>
+</body>
+</html>
